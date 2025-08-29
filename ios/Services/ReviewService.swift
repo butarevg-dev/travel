@@ -41,17 +41,23 @@ class ReviewService: ObservableObject {
         isLoading = true
         error = nil
         
-        let review = Review(
-            id: UUID().uuidString,
-            poiId: poiId,
-            userId: user.uid,
-            rating: rating,
-            text: text,
-            createdAt: Date(),
-            reported: false
-        )
-        
         do {
+            // Check spam quota before posting
+            let quotaResult = try await CloudFunctionsService.shared.checkSpamQuota(
+                contentType: .review, 
+                poiId: poiId
+            )
+            
+            let review = Review(
+                id: UUID().uuidString,
+                poiId: poiId,
+                userId: user.uid,
+                rating: rating,
+                text: text,
+                createdAt: Date(),
+                reported: false
+            )
+            
             try await firestoreService.addReview(review)
             
             // Update local cache
@@ -157,18 +163,24 @@ class ReviewService: ObservableObject {
         isLoading = true
         error = nil
         
-        let question = Question(
-            id: UUID().uuidString,
-            poiId: poiId,
-            userId: user.uid,
-            text: text,
-            createdAt: Date(),
-            answeredBy: nil,
-            answerText: nil,
-            status: "pending"
-        )
-        
         do {
+            // Check spam quota before posting
+            let quotaResult = try await CloudFunctionsService.shared.checkSpamQuota(
+                contentType: .question, 
+                poiId: poiId
+            )
+            
+            let question = Question(
+                id: UUID().uuidString,
+                poiId: poiId,
+                userId: user.uid,
+                text: text,
+                createdAt: Date(),
+                answeredBy: nil,
+                answerText: nil,
+                status: "pending"
+            )
+            
             try await firestoreService.addQuestion(question)
             
             // Update local cache

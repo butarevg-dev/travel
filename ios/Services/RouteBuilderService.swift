@@ -75,9 +75,27 @@ class RouteBuilderService: ObservableObject {
         }
         
         do {
+            // Try Cloud Functions first for better route generation
+            if let cloudRoute = try? await CloudFunctionsService.shared.generateRoute(
+                interests: parameters.interests,
+                duration: parameters.duration,
+                startLocation: parameters.startLocation,
+                maxDistance: parameters.maxDistance,
+                includeClosedPOIs: parameters.includeClosedPOIs
+            ) {
+                await MainActor.run {
+                    isGenerating = false
+                    generationProgress = 0.0
+                }
+                return convertRouteToGeneratedRoute(cloudRoute, parameters: parameters)
+            }
+            
+            // Fallback to local generation
+            await updateProgress(0.1)
+            
             // Step 1: Filter POIs based on interests and preferences
             let filteredPOIs = filterPOIs(pois: pois, parameters: parameters)
-            await updateProgress(0.2)
+            await updateProgress(0.3)
             
             // Step 2: Calculate optimal route
             let routeStops = calculateOptimalRoute(pois: filteredPOIs, parameters: parameters)
@@ -520,5 +538,26 @@ class RouteBuilderService: ObservableObject {
     @MainActor
     private func updateProgress(_ progress: Double) {
         generationProgress = progress
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func convertRouteToGeneratedRoute(_ route: Route, parameters: RouteParameters) -> GeneratedRoute {
+        let difficulty = calculateDifficulty(duration: TimeInterval(route.durationMinutes), distance: route.distanceKm ?? 0)
+        
+        return GeneratedRoute(
+            id: route.id,
+            title: route.title,
+            description: route.description ?? generateRouteDescription(parameters: parameters, stops: route.stops),
+            stops: route.stops,
+            polyline: route.polyline,
+            totalDuration: TimeInterval(route.durationMinutes),
+            totalDistance: route.distanceKm ?? 0,
+            interests: parameters.interests,
+            tags: generateTags(parameters: parameters),
+            estimatedCost: calculateEstimatedCost(stops: route.stops),
+            difficulty: difficulty,
+            audioGuides: [] // Will be populated based on POI audio files
+        )
     }
 }
