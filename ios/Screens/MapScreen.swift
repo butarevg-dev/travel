@@ -3,8 +3,11 @@ import CoreLocation
 
 struct MapScreen: View {
     @StateObject private var provider = MapKitProvider()
+    @StateObject private var locationService = LocationService.shared
     @State private var pois: [POI] = []
     @State private var categoryFilter: String? = nil
+    @State private var nearbyMode = false
+    @State private var nearbyRadius: Double = 1000 // meters
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -23,17 +26,43 @@ struct MapScreen: View {
                     .padding(8)
                     .background(.ultraThinMaterial)
                     .cornerRadius(12)
+                    
                     Spacer()
+                    
+                    Button {
+                        toggleNearbyMode()
+                    } label: {
+                        Image(systemName: nearbyMode ? "location.fill" : "location")
+                            .padding(8)
+                            .background(.ultraThinMaterial)
+                            .cornerRadius(12)
+                    }
+                    
                     Button {
                         centerOnSaransk()
                     } label: {
-                        Image(systemName: "location.circle")
+                        Image(systemName: "map")
                             .padding(8)
                             .background(.ultraThinMaterial)
                             .cornerRadius(12)
                     }
                 }
                 .padding(.horizontal)
+                
+                if nearbyMode {
+                    HStack {
+                        Text("Радиус: \(Int(nearbyRadius))м")
+                        Slider(value: $nearbyRadius, in: 500...5000, step: 500) { _ in
+                            refreshPins()
+                        }
+                    }
+                    .padding(.horizontal)
+                    .padding(.vertical, 4)
+                    .background(.ultraThinMaterial)
+                    .cornerRadius(8)
+                    .padding(.horizontal)
+                }
+                
                 Spacer()
                 MiniAudioPlayerMock().padding()
             }
@@ -41,6 +70,11 @@ struct MapScreen: View {
         .onAppear {
             Task { await loadPOI() }
             centerOnSaransk()
+        }
+        .onChange(of: locationService.authorizationStatus) { _ in
+            if locationService.authorizationStatus == .authorizedWhenInUse {
+                provider.setUserLocationEnabled(true)
+            }
         }
     }
 
@@ -57,10 +91,21 @@ struct MapScreen: View {
     }
 
     private func refreshPins() {
-        let filtered = pois.filter { poi in
-            guard let cat = categoryFilter else { return true }
-            return poi.categories.contains(cat)
+        var filtered = pois
+        
+        // Apply category filter
+        if let cat = categoryFilter {
+            filtered = filtered.filter { $0.categories.contains(cat) }
         }
+        
+        // Apply nearby filter
+        if nearbyMode, let userLocation = locationService.userLocation {
+            filtered = filtered.filter { poi in
+                let poiLocation = CLLocation(latitude: poi.coordinates.lat, longitude: poi.coordinates.lng)
+                return userLocation.distance(from: poiLocation) <= nearbyRadius
+            }
+        }
+        
         let items = filtered.map { poi in
             MapPOIAnnotation(
                 id: poi.id,
@@ -70,6 +115,20 @@ struct MapScreen: View {
             )
         }
         provider.setAnnotations(items)
+    }
+
+    private func toggleNearbyMode() {
+        nearbyMode.toggle()
+        if nearbyMode {
+            if locationService.authorizationStatus == .notDetermined {
+                locationService.requestPermission()
+            } else if locationService.authorizationStatus == .authorizedWhenInUse {
+                provider.setUserLocationEnabled(true)
+                refreshPins()
+            }
+        } else {
+            refreshPins()
+        }
     }
 
     private func centerOnSaransk() {
