@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import CryptoKit
 
 struct OfflineManifest: Codable {
     let version: String
@@ -229,13 +230,7 @@ class OfflineManager: ObservableObject {
 
 extension Data {
     func sha256() -> String {
-        var hash = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
-        withUnsafeBytes { buffer in
-            _ = CC_SHA256(buffer.baseAddress, CC_LONG(count), &hash)
-        }
-        return hash.map { String(format: "%02x", $0) }.joined()
+        let hash = SHA256.hash(data: self)
+        return hash.compactMap { String(format: "%02x", $0) }.joined()
     }
 }
-
-// Import for SHA256
-import CommonCrypto

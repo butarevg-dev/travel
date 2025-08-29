@@ -1,23 +1,27 @@
 import Foundation
 
-final class LocalContentService {
+class LocalContentService {
     static let shared = LocalContentService()
-
-    private func loadJSON<T: Decodable>(_ path: String) -> T? {
-        let url = URL(fileURLWithPath: path)
-        guard let data = try? Data(contentsOf: url) else { return nil }
-        return try? JSONDecoder().decode(T.self, from: data)
-    }
-
-    func loadPOIList() -> [POI] {
-        let path = "content/poi.json"
+    
+    private init() {}
+    
+    func loadPOIs() -> [POI] {
+        guard let url = Bundle.main.url(forResource: "poi", withExtension: "json", subdirectory: "content"),
+              let data = try? Data(contentsOf: url) else {
+            return []
+        }
+        
         struct Wrapper: Decodable { let items: [POI] }
-        return (loadJSON(path) as Wrapper?)?.items ?? []
+        return (try? JSONDecoder().decode(Wrapper.self, from: data))?.items ?? []
     }
-
-    func loadRoutes() -> [RoutePlan] {
-        let path = "content/routes.json"
-        struct Wrapper: Decodable { let items: [RoutePlan] }
-        return (loadJSON(path) as Wrapper?)?.items ?? []
+    
+    func loadRoutes() -> [Route] {
+        guard let url = Bundle.main.url(forResource: "routes", withExtension: "json", subdirectory: "content"),
+              let data = try? Data(contentsOf: url) else {
+            return []
+        }
+        
+        struct Wrapper: Decodable { let items: [Route] }
+        return (try? JSONDecoder().decode(Wrapper.self, from: data))?.items ?? []
     }
 }

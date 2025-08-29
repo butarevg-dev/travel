@@ -6,6 +6,7 @@
     {
       "id": "route-3h-classic",
       "title": "Классический центр — 3 часа",
+      "description": "Классический маршрут по историческому центру Саранска",
       "durationMinutes": 180,
       "distanceKm": 6.5,
       "interests": ["архитектура", "история"],
@@ -13,13 +14,17 @@
         { "poiId": "poi-saransk-kremlin", "note": "Старт на площади", "dwellMin": 20 },
         { "poiId": "poi-museum-local-history", "note": "Музей", "dwellMin": 40 }
       ],
-      "polyline": null,
+      "polyline": [
+        { "lat": 54.1834, "lng": 45.1749 },
+        { "lat": 54.1849, "lng": 45.1771 }
+      ],
       "tags": ["пеший"],
       "meta": { "lastVerified": "2025-08-01" }
     },
     {
       "id": "route-weekend-family",
       "title": "Саранск на выходных — семейный",
+      "description": "Семейный маршрут на выходные с посещением музеев и прогулками",
       "durationMinutes": 720,
       "distanceKm": 14.0,
       "interests": ["семейный", "развлечения", "еда"],
@@ -27,7 +32,10 @@
         { "poiId": "poi-museum-local-history", "note": "Утро в музее", "dwellMin": 60 },
         { "poiId": "poi-saransk-kremlin", "note": "Прогулка по центру", "dwellMin": 30 }
       ],
-      "polyline": null,
+      "polyline": [
+        { "lat": 54.1849, "lng": 45.1771 },
+        { "lat": 54.1834, "lng": 45.1749 }
+      ],
       "tags": ["пеший", "семейный"],
       "meta": { "lastVerified": "2025-08-01" }
     }

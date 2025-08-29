@@ -17,8 +17,8 @@
       "images": [
         { "src": "images/poi/sobornaya-1.jpg", "license": "CC BY", "author": "<указать>" }
       ],
-      "audio": { "src": "audio/poi/sobornaya.m4a", "durationSec": 180, "voice": "elevenlabs" },
-      "rating": { "avg": 4.7, "count": 128 },
+      "audio": ["audio/poi/sobornaya.m4a"],
+      "rating": 4.7,
       "tags": ["топ-место", "семейный"],
       "meta": { "lastVerified": "2025-08-01" }
     },
@@ -36,8 +36,8 @@
       "images": [
         { "src": "images/poi/museum-1.jpg", "license": "CC BY", "author": "<указать>" }
       ],
-      "audio": { "src": "audio/poi/museum.m4a", "durationSec": 240, "voice": "elevenlabs" },
-      "rating": { "avg": 4.6, "count": 86 },
+      "audio": ["audio/poi/museum.m4a"],
+      "rating": 4.6,
       "tags": ["интерактив"],
       "meta": { "lastVerified": "2025-08-01" }
     }

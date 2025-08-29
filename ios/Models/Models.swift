@@ -18,24 +18,25 @@ struct POI: Codable, Identifiable {
     let short: String
     let description: String
     let images: [ImageInfo]
-    let audio: AudioInfo?
-    let rating: RatingInfo?
+    let audio: [String] // Changed to array of strings to match usage
+    let rating: Double // Changed to Double to match usage
     let tags: [String]?
     let meta: [String:String]?
 }
 
 struct RouteStop: Codable { let poiId: String; let note: String?; let dwellMin: Int? }
 
-struct RoutePlan: Codable, Identifiable {
+struct Route: Codable, Identifiable { // Renamed from RoutePlan to Route
     let id: String
     let title: String
     let durationMinutes: Int
     let distanceKm: Double?
     let interests: [String]?
     let stops: [RouteStop]
-    let polyline: String?
+    let polyline: [Coordinates] // Changed to array of Coordinates to match usage
     let tags: [String]?
     let meta: [String:String]?
+    let description: String? // Added to match usage
 }
 
 struct Review: Codable, Identifiable {
