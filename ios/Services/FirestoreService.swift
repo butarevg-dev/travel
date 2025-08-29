@@ -12,7 +12,7 @@ final class FirestoreService {
         let snap = try await db.collection("poi").getDocuments()
         return try snap.documents.compactMap { try $0.data(as: POI.self) }
         #else
-        return []
+        return LocalContentService.shared.loadPOIList()
         #endif
     }
 
@@ -24,7 +24,7 @@ final class FirestoreService {
         let doc = try await db.collection("poi").document(id).getDocument()
         return try doc.data(as: POI.self)
         #else
-        return nil
+        return LocalContentService.shared.loadPOIList().first { $0.id == id }
         #endif
     }
 
@@ -37,7 +37,7 @@ final class FirestoreService {
         let snap = try await db.collection("routes").getDocuments()
         return try snap.documents.compactMap { try $0.data(as: RoutePlan.self) }
         #else
-        return []
+        return LocalContentService.shared.loadRoutes()
         #endif
     }
 
@@ -49,7 +49,7 @@ final class FirestoreService {
         let doc = try await db.collection("routes").document(id).getDocument()
         return try doc.data(as: RoutePlan.self)
         #else
-        return nil
+        return LocalContentService.shared.loadRoutes().first { $0.id == id }
         #endif
     }
 
@@ -61,6 +61,7 @@ final class FirestoreService {
         let db = Firestore.firestore()
         try db.collection("reviews").document(review.id).setData(from: review)
         #else
+        // no-op in mock mode
         #endif
     }
 
@@ -84,6 +85,7 @@ final class FirestoreService {
         let db = Firestore.firestore()
         try db.collection("questions").document(q.id).setData(from: q)
         #else
+        // no-op in mock mode
         #endif
     }
 
@@ -119,6 +121,7 @@ final class FirestoreService {
         let db = Firestore.firestore()
         try db.collection("users").document(p.id).setData(from: p, merge: true)
         #else
+        // no-op in mock mode
         #endif
     }
 }

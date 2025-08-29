@@ -1,10 +1,14 @@
 import SwiftUI
+#if canImport(FirebaseCore)
 import FirebaseCore
+#endif
 
 @main
 struct SaranskTouristApp: App {
     init() {
+        #if canImport(FirebaseCore)
         FirebaseApp.configure()
+        #endif
     }
 
     var body: some Scene {
@@ -12,9 +16,7 @@ struct SaranskTouristApp: App {
             RootTabs()
         }
         .onOpenURL { url in
-            // TODO: forward to GoogleSignIn / VK SDK handlers
-            // GIDSignIn.sharedInstance.handle(url)
-            // VKSdk.processOpen(url, fromApplication: nil)
+            // Hook SDK handlers here when integrated (Google/VK)
         }
     }
 }
