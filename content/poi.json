@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "updatedAt": "2025-08-28T00:00:00Z",
+  "language": "ru",
+  "items": [
+    {
+      "id": "poi-saransk-kremlin",
+      "title": "Соборная площадь",
+      "categories": ["архитектура", "история"],
+      "coordinates": { "lat": 54.1834, "lng": 45.1749 },
+      "address": "Саранск, Соборная площадь",
+      "openingHours": "ежедневно 08:00–20:00",
+      "ticket": null,
+      "contacts": { "site": null, "phone": null },
+      "short": "Главная площадь города с историческими зданиями и соборами.",
+      "description": "Соборная площадь — центр городской жизни Саранска...",
+      "images": [
+        { "src": "images/poi/sobornaya-1.jpg", "license": "CC BY", "author": "<указать>" }
+      ],
+      "audio": { "src": "audio/poi/sobornaya.m4a", "durationSec": 180, "voice": "elevenlabs" },
+      "rating": { "avg": 4.7, "count": 128 },
+      "tags": ["топ-место", "семейный"],
+      "meta": { "lastVerified": "2025-08-01" }
+    },
+    {
+      "id": "poi-museum-local-history",
+      "title": "Мордовский республиканский музей",
+      "categories": ["музеи", "история"],
+      "coordinates": { "lat": 54.1849, "lng": 45.1771 },
+      "address": "Саранск, ул. Советская, 34",
+      "openingHours": "Вт–Вс 10:00–18:00, Пн — выходной",
+      "ticket": "от 200 ₽",
+      "contacts": { "site": "https://example-museum.ru", "phone": "+7 (8342) 000-000" },
+      "short": "Крупнейший музей региона с этнографической коллекцией.",
+      "description": "Музей знакомит с историей Мордовии...",
+      "images": [
+        { "src": "images/poi/museum-1.jpg", "license": "CC BY", "author": "<указать>" }
+      ],
+      "audio": { "src": "audio/poi/museum.m4a", "durationSec": 240, "voice": "elevenlabs" },
+      "rating": { "avg": 4.6, "count": 86 },
+      "tags": ["интерактив"],
+      "meta": { "lastVerified": "2025-08-01" }
+    }
+  ]
+}
