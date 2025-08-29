@@ -1,19 +1,79 @@
 import SwiftUI
+import CoreLocation
 
 struct MapScreen: View {
+    @StateObject private var provider = MapKitProvider()
+    @State private var pois: [POI] = []
+    @State private var categoryFilter: String? = nil
+
     var body: some View {
-        ZStack {
-            Color.blue.opacity(0.1).ignoresSafeArea()
-            VStack(spacing: 12) {
-                Text("Главная карта")
-                    .font(.title2).bold()
-                Text("Моки: пины, фильтры, кнопка \"Собрать маршрут\"")
-                    .foregroundColor(.secondary)
+        ZStack(alignment: .top) {
+            provider.representable()
+                .ignoresSafeArea()
+            VStack(spacing: 8) {
+                HStack {
+                    Menu(categoryFilter ?? "Все категории") {
+                        Button("Все категории") { categoryFilter = nil; refreshPins() }
+                        Button("Архитектура") { categoryFilter = "архитектура"; refreshPins() }
+                        Button("Музеи") { categoryFilter = "музеи"; refreshPins() }
+                        Button("Еда") { categoryFilter = "еда"; refreshPins() }
+                        Button("Сувениры") { categoryFilter = "сувениры"; refreshPins() }
+                        Button("Развлечения") { categoryFilter = "развлечения"; refreshPins() }
+                    }
+                    .padding(8)
+                    .background(.ultraThinMaterial)
+                    .cornerRadius(12)
+                    Spacer()
+                    Button {
+                        centerOnSaransk()
+                    } label: {
+                        Image(systemName: "location.circle")
+                            .padding(8)
+                            .background(.ultraThinMaterial)
+                            .cornerRadius(12)
+                    }
+                }
+                .padding(.horizontal)
                 Spacer()
-                MiniAudioPlayerMock()
+                MiniAudioPlayerMock().padding()
             }
-            .padding()
         }
+        .onAppear {
+            Task { await loadPOI() }
+            centerOnSaransk()
+        }
+    }
+
+    private func loadPOI() async {
+        do {
+            let list = try await FirestoreService.shared.fetchPOIList()
+            await MainActor.run {
+                self.pois = list
+                refreshPins()
+            }
+        } catch {
+            // handle error or keep empty
+        }
+    }
+
+    private func refreshPins() {
+        let filtered = pois.filter { poi in
+            guard let cat = categoryFilter else { return true }
+            return poi.categories.contains(cat)
+        }
+        let items = filtered.map { poi in
+            MapPOIAnnotation(
+                id: poi.id,
+                title: poi.title,
+                coordinate: CLLocationCoordinate2D(latitude: poi.coordinates.lat, longitude: poi.coordinates.lng),
+                category: poi.categories.first ?? ""
+            )
+        }
+        provider.setAnnotations(items)
+    }
+
+    private func centerOnSaransk() {
+        provider.setRegion(center: CLLocationCoordinate2D(latitude: 54.1834, longitude: 45.1749), spanDegrees: 0.12)
     }
 }
 
