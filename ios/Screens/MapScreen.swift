@@ -11,6 +11,7 @@ struct MapScreen: View {
     @State private var nearbyRadius: Double = 1000 // meters
     @State private var showFilters = false
     @State private var selectedRoute: Route? = nil
+    @State private var routeTimeInfo: RouteTimeInfo? = nil
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -41,11 +42,13 @@ struct MapScreen: View {
                     Menu {
                         Button("Скрыть маршруты") {
                             selectedRoute = nil
+                            routeTimeInfo = nil
                             refreshMap()
                         }
                         ForEach(routes, id: \.id) { route in
                             Button(route.title) {
                                 selectedRoute = route
+                                calculateRouteTime(route)
                                 showRouteOnMap(route)
                             }
                         }
@@ -157,6 +160,14 @@ struct MapScreen: View {
                 
                 Spacer()
                 
+                // Route info panel
+                if let timeInfo = routeTimeInfo, let route = selectedRoute {
+                    RouteInfoPanel(route: route, timeInfo: timeInfo)
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 8)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+                
                 // Audio player
                 MiniAudioPlayerMock()
                     .padding(.horizontal, 16)
@@ -177,6 +188,7 @@ struct MapScreen: View {
         }
         .animation(.easeInOut(duration: 0.3), value: showFilters)
         .animation(.easeInOut(duration: 0.3), value: nearbyMode)
+        .animation(.easeInOut(duration: 0.3), value: routeTimeInfo != nil)
     }
 
     private func loadPOI() async {
@@ -200,6 +212,11 @@ struct MapScreen: View {
         } catch {
             // handle error or keep empty
         }
+    }
+    
+    private func calculateRouteTime(_ route: Route) {
+        let timeInfo = RouteCalculator.shared.calculateTotalRouteTime(route: route, pois: pois)
+        routeTimeInfo = timeInfo
     }
 
     private func refreshPins() {
@@ -274,6 +291,54 @@ struct MapScreen: View {
 
     private func centerOnSaransk() {
         provider.setRegion(center: CLLocationCoordinate2D(latitude: 54.1834, longitude: 45.1749), spanDegrees: 0.12)
+    }
+}
+
+struct RouteInfoPanel: View {
+    let route: Route
+    let timeInfo: RouteTimeInfo
+    
+    var body: some View {
+        VStack(spacing: 8) {
+            HStack {
+                Text(route.title)
+                    .font(.system(size: 16, weight: .semibold))
+                Spacer()
+                Text(timeInfo.formattedTotalTime)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.red)
+            }
+            
+            HStack(spacing: 16) {
+                InfoItem(icon: "figure.walk", title: "Ходьба", value: timeInfo.formattedWalkingTime)
+                InfoItem(icon: "mappin.circle", title: "Точки", value: "\(timeInfo.poiCount)")
+                InfoItem(icon: "location", title: "Расстояние", value: timeInfo.formattedDistance)
+            }
+        }
+        .padding(16)
+        .background(.ultraThinMaterial)
+        .cornerRadius(16)
+    }
+}
+
+struct InfoItem: View {
+    let icon: String
+    let title: String
+    let value: String
+    
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.system(size: 12))
+                .foregroundColor(.secondary)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(.secondary)
+                Text(value)
+                    .font(.system(size: 12, weight: .semibold))
+            }
+        }
     }
 }
 
