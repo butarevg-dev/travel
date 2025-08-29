@@ -5,10 +5,12 @@ struct MapScreen: View {
     @StateObject private var provider = MapKitProvider()
     @StateObject private var locationService = LocationService.shared
     @State private var pois: [POI] = []
+    @State private var routes: [Route] = []
     @State private var categoryFilter: String? = nil
     @State private var nearbyMode = false
     @State private var nearbyRadius: Double = 1000 // meters
     @State private var showFilters = false
+    @State private var selectedRoute: Route? = nil
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -34,6 +36,27 @@ struct MapScreen: View {
                     }
                     
                     Spacer()
+                    
+                    // Route selection button
+                    Menu {
+                        Button("Скрыть маршруты") {
+                            selectedRoute = nil
+                            refreshMap()
+                        }
+                        ForEach(routes, id: \.id) { route in
+                            Button(route.title) {
+                                selectedRoute = route
+                                showRouteOnMap(route)
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "map.fill")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(selectedRoute != nil ? .red : .primary)
+                            .padding(10)
+                            .background(.ultraThinMaterial)
+                            .cornerRadius(20)
+                    }
                     
                     // Nearby mode button
                     Button {
@@ -141,7 +164,10 @@ struct MapScreen: View {
             }
         }
         .onAppear {
-            Task { await loadPOI() }
+            Task { 
+                await loadPOI()
+                await loadRoutes()
+            }
             centerOnSaransk()
         }
         .onChange(of: locationService.authorizationStatus) { _ in
@@ -159,6 +185,17 @@ struct MapScreen: View {
             await MainActor.run {
                 self.pois = list
                 refreshPins()
+            }
+        } catch {
+            // handle error or keep empty
+        }
+    }
+    
+    private func loadRoutes() async {
+        do {
+            let list = try await FirestoreService.shared.fetchRouteList()
+            await MainActor.run {
+                self.routes = list
             }
         } catch {
             // handle error or keep empty
@@ -191,6 +228,35 @@ struct MapScreen: View {
         }
         provider.setAnnotations(items)
     }
+    
+    private func refreshMap() {
+        refreshPins()
+        if let route = selectedRoute {
+            showRouteOnMap(route)
+        }
+    }
+    
+    private func showRouteOnMap(_ route: Route) {
+        // Create polyline from route coordinates
+        let coordinates = route.polyline.map { coord in
+            CLLocationCoordinate2D(latitude: coord.lat, longitude: coord.lng)
+        }
+        
+        let polyline = MapRoutePolyline(
+            id: route.id,
+            title: route.title,
+            coordinates: coordinates,
+            color: .red
+        )
+        
+        provider.setPolylines([polyline])
+        
+        // Fit map to show the entire route
+        if !coordinates.isEmpty {
+            let region = MKCoordinateRegion(coordinates: coordinates)
+            provider.setRegion(center: region.center, spanDegrees: max(region.span.latitudeDelta, region.span.longitudeDelta) * 1.2)
+        }
+    }
 
     private func toggleNearbyMode() {
         nearbyMode.toggle()
@@ -208,6 +274,33 @@ struct MapScreen: View {
 
     private func centerOnSaransk() {
         provider.setRegion(center: CLLocationCoordinate2D(latitude: 54.1834, longitude: 45.1749), spanDegrees: 0.12)
+    }
+}
+
+// Extension to help with coordinate region calculations
+extension MKCoordinateRegion {
+    init(coordinates: [CLLocationCoordinate2D]) {
+        guard !coordinates.isEmpty else {
+            self.init()
+            return
+        }
+        
+        let minLat = coordinates.map { $0.latitude }.min()!
+        let maxLat = coordinates.map { $0.latitude }.max()!
+        let minLng = coordinates.map { $0.longitude }.min()!
+        let maxLng = coordinates.map { $0.longitude }.max()!
+        
+        let center = CLLocationCoordinate2D(
+            latitude: (minLat + maxLat) / 2,
+            longitude: (minLng + maxLng) / 2
+        )
+        
+        let span = MKCoordinateSpan(
+            latitudeDelta: (maxLat - minLat) * 1.1,
+            longitudeDelta: (maxLng - minLng) * 1.1
+        )
+        
+        self.init(center: center, span: span)
     }
 }
 
