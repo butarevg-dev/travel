@@ -2,7 +2,9 @@ import SwiftUI
 
 struct ProfileScreen: View {
     @StateObject private var offlineManager = OfflineManager.shared
+    @StateObject private var audioCacheManager = AudioCacheManager.shared
     @State private var showingOfflineAlert = false
+    @State private var showingAudioCacheAlert = false
     
     var body: some View {
         NavigationStack {
@@ -38,6 +40,26 @@ struct ProfileScreen: View {
                     if offlineManager.isOfflineModeEnabled {
                         Button("Удалить оффлайн-контент") {
                             showingOfflineAlert = true
+                        }
+                        .foregroundColor(.red)
+                    }
+                }
+                
+                Section("Аудио-кэш") {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Скачанные аудиогиды")
+                                .font(.system(size: 16, weight: .medium))
+                            Text("\(audioCacheManager.downloadedAudios.count) файлов")
+                                .font(.system(size: 12))
+                                .foregroundColor(.secondary)
+                            Text("Размер: \(formatFileSize(audioCacheManager.getCacheSize()))")
+                                .font(.system(size: 12))
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+                        Button("Очистить") {
+                            showingAudioCacheAlert = true
                         }
                         .foregroundColor(.red)
                     }
@@ -93,6 +115,14 @@ struct ProfileScreen: View {
                 }
             } message: {
                 Text("Это действие нельзя отменить. Весь загруженный контент будет удален.")
+            }
+            .alert("Очистить аудио-кэш?", isPresented: $showingAudioCacheAlert) {
+                Button("Отмена", role: .cancel) { }
+                Button("Очистить", role: .destructive) {
+                    audioCacheManager.clearCache()
+                }
+            } message: {
+                Text("Все скачанные аудиогиды будут удалены.")
             }
         }
     }

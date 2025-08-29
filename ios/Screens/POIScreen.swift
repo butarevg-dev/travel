@@ -160,9 +160,9 @@ struct POIListItem: View {
 struct POIDetailView: View {
     let poi: POI
     @ObservedObject var viewModel: POIViewModel
+    @StateObject private var audioService = AudioPlayerService.shared
     @State private var rating: Int = 0
     @State private var comment: String = ""
-    @State private var showingAudioPlayer = false
     
     var body: some View {
         ScrollView {
@@ -255,7 +255,7 @@ struct POIDetailView: View {
                     
                     // Audio guide button
                     if !poi.audio.isEmpty {
-                        Button(action: { showingAudioPlayer.toggle() }) {
+                        Button(action: playAudioGuide) {
                             HStack {
                                 Image(systemName: "headphones")
                                 Text("Аудиогид")
@@ -290,48 +290,16 @@ struct POIDetailView: View {
         }
         .navigationTitle("Детали")
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(isPresented: $showingAudioPlayer) {
-            AudioPlayerView(audioURL: poi.audio.first ?? "")
-        }
     }
-}
-
-struct AudioPlayerView: View {
-    let audioURL: String
-    @Environment(\.dismiss) private var dismiss
     
-    var body: some View {
-        NavigationStack {
-            VStack(spacing: 20) {
-                Spacer()
-                
-                Image(systemName: "headphones.circle")
-                    .font(.system(size: 80))
-                    .foregroundColor(.red)
-                
-                Text("Аудиогид")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                
-                Text("Воспроизведение аудио")
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                
-                MiniAudioPlayerMock()
-                    .padding(.horizontal, 32)
-                
-                Spacer()
-            }
-            .navigationTitle("Аудиогид")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Закрыть") {
-                        dismiss()
-                    }
-                }
-            }
-        }
+    private func playAudioGuide() {
+        guard let audioURL = poi.audio.first else { return }
+        
+        // Create a mock URL for demonstration
+        // In a real app, this would be a real audio file URL
+        let url = URL(string: audioURL) ?? URL(string: "https://example.com/audio.m4a")!
+        
+        audioService.loadAudio(from: url, title: "Аудиогид: \(poi.title)", poiId: poi.id)
     }
 }
 
