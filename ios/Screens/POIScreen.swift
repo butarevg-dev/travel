@@ -258,7 +258,7 @@ struct POIDetailView: View {
                         Button(action: playAudioGuide) {
                             HStack {
                                 Image(systemName: "headphones")
-                                Text("Аудиогид")
+                                Text("poi_audio_guide", bundle: .main)
                                 Spacer()
                                 Image(systemName: "play.circle.fill")
                                     .foregroundColor(.red)
@@ -267,6 +267,8 @@ struct POIDetailView: View {
                             .background(.ultraThinMaterial)
                             .cornerRadius(12)
                         }
+                        .accessibilityLabel(Text("poi_audio_guide", bundle: .main))
+                        .accessibilityHint(Text("poi_audio_guide_hint", bundle: .main))
                     }
                     
                     // Comments section

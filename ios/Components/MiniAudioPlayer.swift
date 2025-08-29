@@ -18,6 +18,8 @@ struct MiniAudioPlayer: View {
                         let seekTime = progress * audioService.duration
                         audioService.seek(to: seekTime)
                     }
+                    .accessibilityLabel(Text("audio_progress_bar", bundle: .main))
+                    .accessibilityValue(Text("audio_progress_value", bundle: .main, arguments: formatTime(audioService.currentTime), formatTime(audioService.duration)))
                 
                 // Player controls
                 HStack(spacing: 16) {
@@ -26,10 +28,12 @@ struct MiniAudioPlayer: View {
                         Text(currentAudio.title)
                             .font(.system(size: 14, weight: .semibold))
                             .lineLimit(1)
+                            .accessibilityLabel(Text("audio_title", bundle: .main))
                         
                         Text(formatTime(audioService.currentTime))
                             .font(.system(size: 12))
                             .foregroundColor(.secondary)
+                            .accessibilityLabel(Text("audio_current_time", bundle: .main))
                     }
                     
                     Spacer()
@@ -42,6 +46,8 @@ struct MiniAudioPlayer: View {
                                 .font(.system(size: 18, weight: .medium))
                                 .foregroundColor(.primary)
                         }
+                        .accessibilityLabel(Text("audio_skip_backward", bundle: .main))
+                        .accessibilityHint(Text("audio_skip_backward_hint", bundle: .main))
                         
                         // Play/Pause
                         Button(action: audioService.togglePlayback) {
@@ -49,6 +55,8 @@ struct MiniAudioPlayer: View {
                                 .font(.system(size: 24, weight: .medium))
                                 .foregroundColor(.red)
                         }
+                        .accessibilityLabel(audioService.isPlaying ? Text("audio_pause", bundle: .main) : Text("audio_play", bundle: .main))
+                        .accessibilityHint(Text("audio_play_pause_hint", bundle: .main))
                         
                         // Skip forward
                         Button(action: audioService.skipForward) {
@@ -56,6 +64,8 @@ struct MiniAudioPlayer: View {
                                 .font(.system(size: 18, weight: .medium))
                                 .foregroundColor(.primary)
                         }
+                        .accessibilityLabel(Text("audio_skip_forward", bundle: .main))
+                        .accessibilityHint(Text("audio_skip_forward_hint", bundle: .main))
                     }
                     
                     Spacer()
@@ -64,12 +74,12 @@ struct MiniAudioPlayer: View {
                     HStack(spacing: 8) {
                         // Speed control
                         Menu {
-                            Button("0.5x") { audioService.setPlaybackRate(0.5) }
-                            Button("1.0x") { audioService.setPlaybackRate(1.0) }
-                            Button("1.5x") { audioService.setPlaybackRate(1.5) }
-                            Button("2.0x") { audioService.setPlaybackRate(2.0) }
+                            Button(Text("audio_speed_05x", bundle: .main)) { audioService.setPlaybackRate(0.5) }
+                            Button(Text("audio_speed_10x", bundle: .main)) { audioService.setPlaybackRate(1.0) }
+                            Button(Text("audio_speed_15x", bundle: .main)) { audioService.setPlaybackRate(1.5) }
+                            Button(Text("audio_speed_20x", bundle: .main)) { audioService.setPlaybackRate(2.0) }
                         } label: {
-                            Text("x\(String(format: "%.1f", audioService.playbackRate))")
+                            Text("audio_speed_format", bundle: .main, arguments: String(format: "%.1f", audioService.playbackRate))
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundColor(.secondary)
                                 .padding(.horizontal, 8)
@@ -77,6 +87,7 @@ struct MiniAudioPlayer: View {
                                 .background(.ultraThinMaterial)
                                 .cornerRadius(8)
                         }
+                        .accessibilityLabel(Text("audio_speed_control", bundle: .main))
                         
                         // Download/Delete button
                         Button(action: toggleDownload) {
@@ -84,6 +95,8 @@ struct MiniAudioPlayer: View {
                                 .font(.system(size: 16, weight: .medium))
                                 .foregroundColor(cacheManager.isDownloaded(currentAudio.url) ? .red : .secondary)
                         }
+                        .accessibilityLabel(cacheManager.isDownloaded(currentAudio.url) ? Text("audio_delete", bundle: .main) : Text("audio_download", bundle: .main))
+                        .accessibilityHint(cacheManager.isDownloaded(currentAudio.url) ? Text("audio_delete_hint", bundle: .main) : Text("audio_download_hint", bundle: .main))
                         
                         // Full player button
                         Button(action: { showingFullPlayer = true }) {
@@ -91,6 +104,8 @@ struct MiniAudioPlayer: View {
                                 .font(.system(size: 16, weight: .medium))
                                 .foregroundColor(.secondary)
                         }
+                        .accessibilityLabel(Text("audio_full_player", bundle: .main))
+                        .accessibilityHint(Text("audio_full_player_hint", bundle: .main))
                     }
                 }
                 .padding(.horizontal, 16)
@@ -110,6 +125,7 @@ struct MiniAudioPlayer: View {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle(tint: .red))
                             .scaleEffect(0.8)
+                            .accessibilityLabel(Text("audio_loading", bundle: .main))
                     }
                 }
                 .padding(.trailing, 60)
@@ -159,11 +175,12 @@ struct FullAudioPlayerView: View {
                             Image(systemName: "headphones.circle")
                                 .font(.system(size: 60))
                                 .foregroundColor(.red)
-                            Text("Аудиогид")
+                            Text("audio_guide", bundle: .main)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
                     )
+                    .accessibilityLabel(Text("audio_artwork", bundle: .main))
                 
                 // Audio info
                 VStack(spacing: 8) {
@@ -171,11 +188,13 @@ struct FullAudioPlayerView: View {
                         .font(.title2)
                         .fontWeight(.semibold)
                         .multilineTextAlignment(.center)
+                        .accessibilityLabel(Text("audio_title", bundle: .main))
                     
                     if let poiId = audio.poiId {
-                        Text("POI: \(poiId)")
+                        Text("audio_poi_info", bundle: .main, arguments: poiId)
                             .font(.caption)
                             .foregroundColor(.secondary)
+                            .accessibilityLabel(Text("audio_poi_label", bundle: .main))
                     }
                 }
                 
@@ -186,17 +205,21 @@ struct FullAudioPlayerView: View {
                         ProgressView(value: audioService.duration > 0 ? audioService.currentTime / audioService.duration : 0)
                             .progressViewStyle(LinearProgressViewStyle(tint: .red))
                             .scaleEffect(y: 2)
+                            .accessibilityLabel(Text("audio_progress_bar", bundle: .main))
+                            .accessibilityValue(Text("audio_progress_value", bundle: .main, arguments: formatTime(audioService.currentTime), formatTime(audioService.duration)))
                         
                         HStack {
                             Text(formatTime(audioService.currentTime))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
+                                .accessibilityLabel(Text("audio_current_time", bundle: .main))
                             
                             Spacer()
                             
                             Text(formatTime(audioService.duration))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
+                                .accessibilityLabel(Text("audio_total_time", bundle: .main))
                         }
                     }
                     
@@ -208,6 +231,7 @@ struct FullAudioPlayerView: View {
                                 .font(.system(size: 24, weight: .medium))
                                 .foregroundColor(.primary)
                         }
+                        .accessibilityLabel(Text("audio_skip_backward", bundle: .main))
                         
                         // Play/Pause
                         Button(action: audioService.togglePlayback) {
@@ -215,6 +239,7 @@ struct FullAudioPlayerView: View {
                                 .font(.system(size: 48, weight: .medium))
                                 .foregroundColor(.red)
                         }
+                        .accessibilityLabel(audioService.isPlaying ? Text("audio_pause", bundle: .main) : Text("audio_play", bundle: .main))
                         
                         // Skip forward
                         Button(action: audioService.skipForward) {
@@ -222,6 +247,7 @@ struct FullAudioPlayerView: View {
                                 .font(.system(size: 24, weight: .medium))
                                 .foregroundColor(.primary)
                         }
+                        .accessibilityLabel(Text("audio_skip_forward", bundle: .main))
                     }
                 }
                 
@@ -234,19 +260,20 @@ struct FullAudioPlayerView: View {
                                 Image(systemName: "speedometer")
                                     .font(.system(size: 20))
                                     .foregroundColor(.secondary)
-                                Text("x\(String(format: "%.1f", audioService.playbackRate))")
+                                Text("audio_speed_format", bundle: .main, arguments: String(format: "%.1f", audioService.playbackRate))
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
                         }
+                        .accessibilityLabel(Text("audio_speed_control", bundle: .main))
                         .actionSheet(isPresented: $showingSpeedMenu) {
                             ActionSheet(
-                                title: Text("Скорость воспроизведения"),
+                                title: Text("audio_speed_title", bundle: .main),
                                 buttons: [
-                                    .default(Text("0.5x")) { audioService.setPlaybackRate(0.5) },
-                                    .default(Text("1.0x")) { audioService.setPlaybackRate(1.0) },
-                                    .default(Text("1.5x")) { audioService.setPlaybackRate(1.5) },
-                                    .default(Text("2.0x")) { audioService.setPlaybackRate(2.0) },
+                                    .default(Text("audio_speed_05x", bundle: .main)) { audioService.setPlaybackRate(0.5) },
+                                    .default(Text("audio_speed_10x", bundle: .main)) { audioService.setPlaybackRate(1.0) },
+                                    .default(Text("audio_speed_15x", bundle: .main)) { audioService.setPlaybackRate(1.5) },
+                                    .default(Text("audio_speed_20x", bundle: .main)) { audioService.setPlaybackRate(2.0) },
                                     .cancel()
                                 ]
                             )
@@ -260,11 +287,12 @@ struct FullAudioPlayerView: View {
                                 Image(systemName: cacheManager.isDownloaded(audio.url) ? "trash" : "arrow.down.circle")
                                     .font(.system(size: 20))
                                     .foregroundColor(cacheManager.isDownloaded(audio.url) ? .red : .secondary)
-                                Text(cacheManager.isDownloaded(audio.url) ? "Удалить" : "Скачать")
+                                Text(cacheManager.isDownloaded(audio.url) ? "audio_delete" : "audio_download", bundle: .main)
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
                         }
+                        .accessibilityLabel(cacheManager.isDownloaded(audio.url) ? Text("audio_delete", bundle: .main) : Text("audio_download", bundle: .main))
                     }
                     
                     // Share
@@ -274,22 +302,23 @@ struct FullAudioPlayerView: View {
                                 Image(systemName: "square.and.arrow.up")
                                     .font(.system(size: 20))
                                     .foregroundColor(.secondary)
-                                Text("Поделиться")
+                                Text("audio_share", bundle: .main)
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
                         }
+                        .accessibilityLabel(Text("audio_share", bundle: .main))
                     }
                 }
                 
                 Spacer()
             }
             .padding(24)
-            .navigationTitle("Аудиогид")
+            .navigationTitle(Text("audio_guide", bundle: .main))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Закрыть") {
+                    Button(Text("audio_close", bundle: .main)) {
                         dismiss()
                     }
                 }
