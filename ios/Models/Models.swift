@@ -46,7 +46,7 @@ struct Review: Codable, Identifiable {
     let rating: Int
     let text: String?
     let createdAt: Date
-    let reported: Bool?
+    var reported: Bool?
 }
 
 struct Question: Codable, Identifiable {
@@ -55,9 +55,9 @@ struct Question: Codable, Identifiable {
     let userId: String
     let text: String
     let createdAt: Date
-    let answeredBy: String?
-    let answerText: String?
-    let status: String
+    var answeredBy: String?
+    var answerText: String?
+    var status: String
 }
 
 struct Badge: Codable, Identifiable {
@@ -85,6 +85,7 @@ struct UserProfile: Codable, Identifiable {
     let providers: [String]
     let favorites: [String]
     let badges: [String]
+    let routeHistory: [String]
     let settings: [String:String]
     let premiumUntil: Date?
 }

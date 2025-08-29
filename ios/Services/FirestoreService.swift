@@ -60,6 +60,14 @@ class FirestoreService {
         try await db.collection("reviews").addDocument(from: review)
     }
     
+    func updateReview(_ review: Review) async throws {
+        try await db.collection("reviews").document(review.id).setData(from: review)
+    }
+    
+    func deleteReview(_ reviewId: String) async throws {
+        try await db.collection("reviews").document(reviewId).delete()
+    }
+    
     // MARK: - Questions
     func fetchQuestions(for poiId: String) async throws -> [Question] {
         let snap = try await db.collection("questions")
@@ -71,6 +79,14 @@ class FirestoreService {
     
     func addQuestion(_ question: Question) async throws {
         try await db.collection("questions").addDocument(from: question)
+    }
+    
+    func updateQuestion(_ question: Question) async throws {
+        try await db.collection("questions").document(question.id).setData(from: question)
+    }
+    
+    func deleteQuestion(_ questionId: String) async throws {
+        try await db.collection("questions").document(questionId).delete()
     }
     
     // MARK: - User Profile

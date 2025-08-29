@@ -2,6 +2,7 @@ import SwiftUI
 
 struct POIScreen: View {
     @StateObject private var viewModel = POIViewModel()
+    @StateObject private var userService = UserService.shared
     @State private var searchText = ""
     @State private var selectedCategory: String? = nil
     @State private var showFavoritesOnly = false

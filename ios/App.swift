@@ -5,6 +5,8 @@ import FirebaseCore
 
 @main
 struct SaranskTouristApp: App {
+    @StateObject private var authService = AuthService.shared
+    
     init() {
         #if canImport(FirebaseCore)
         FirebaseApp.configure()
@@ -13,10 +15,28 @@ struct SaranskTouristApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootTabs()
+            Group {
+                if authService.isAuthenticated {
+                    RootTabs()
+                } else {
+                    AuthScreen()
+                }
+            }
         }
         .onOpenURL { url in
-            // Hook SDK handlers here when integrated (Google/VK)
+            handleDeepLink(url)
+        }
+    }
+    
+    private func handleDeepLink(_ url: URL) {
+        // Handle Google Sign-In callback
+        if url.scheme == "com.googleusercontent.apps.YOUR_CLIENT_ID" {
+            // Google Sign-In will handle this automatically
+        }
+        
+        // Handle VK authentication callback
+        if url.scheme == "vk" {
+            // VK SDK will handle this automatically
         }
     }
 }
