@@ -8,63 +8,136 @@ struct MapScreen: View {
     @State private var categoryFilter: String? = nil
     @State private var nearbyMode = false
     @State private var nearbyRadius: Double = 1000 // meters
+    @State private var showFilters = false
 
     var body: some View {
         ZStack(alignment: .top) {
             provider.representable()
                 .ignoresSafeArea()
-            VStack(spacing: 8) {
+            
+            VStack(spacing: 0) {
+                // Top controls
                 HStack {
-                    Menu(categoryFilter ?? "Все категории") {
-                        Button("Все категории") { categoryFilter = nil; refreshPins() }
-                        Button("Архитектура") { categoryFilter = "архитектура"; refreshPins() }
-                        Button("Музеи") { categoryFilter = "музеи"; refreshPins() }
-                        Button("Еда") { categoryFilter = "еда"; refreshPins() }
-                        Button("Сувениры") { categoryFilter = "сувениры"; refreshPins() }
-                        Button("Развлечения") { categoryFilter = "развлечения"; refreshPins() }
+                    // Category filter button
+                    Button {
+                        showFilters.toggle()
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "line.3.horizontal.decrease.circle")
+                            Text(categoryFilter ?? "Все")
+                                .font(.system(size: 14, weight: .medium))
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(.ultraThinMaterial)
+                        .cornerRadius(20)
                     }
-                    .padding(8)
-                    .background(.ultraThinMaterial)
-                    .cornerRadius(12)
                     
                     Spacer()
                     
+                    // Nearby mode button
                     Button {
                         toggleNearbyMode()
                     } label: {
                         Image(systemName: nearbyMode ? "location.fill" : "location")
-                            .padding(8)
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(nearbyMode ? .red : .primary)
+                            .padding(10)
                             .background(.ultraThinMaterial)
-                            .cornerRadius(12)
+                            .cornerRadius(20)
                     }
                     
+                    // Center map button
                     Button {
                         centerOnSaransk()
                     } label: {
                         Image(systemName: "map")
-                            .padding(8)
+                            .font(.system(size: 16, weight: .medium))
+                            .padding(10)
                             .background(.ultraThinMaterial)
-                            .cornerRadius(12)
+                            .cornerRadius(20)
                     }
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
                 
+                // Category filters panel
+                if showFilters {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            CategoryChip(title: "Все", isSelected: categoryFilter == nil) {
+                                categoryFilter = nil
+                                refreshPins()
+                                showFilters = false
+                            }
+                            
+                            CategoryChip(title: "Архитектура", isSelected: categoryFilter == "архитектура") {
+                                categoryFilter = "архитектура"
+                                refreshPins()
+                                showFilters = false
+                            }
+                            
+                            CategoryChip(title: "Музеи", isSelected: categoryFilter == "музеи") {
+                                categoryFilter = "музеи"
+                                refreshPins()
+                                showFilters = false
+                            }
+                            
+                            CategoryChip(title: "Еда", isSelected: categoryFilter == "еда") {
+                                categoryFilter = "еда"
+                                refreshPins()
+                                showFilters = false
+                            }
+                            
+                            CategoryChip(title: "Сувениры", isSelected: categoryFilter == "сувениры") {
+                                categoryFilter = "сувениры"
+                                refreshPins()
+                                showFilters = false
+                            }
+                            
+                            CategoryChip(title: "Развлечения", isSelected: categoryFilter == "развлечения") {
+                                categoryFilter = "развлечения"
+                                refreshPins()
+                                showFilters = false
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                    }
+                    .padding(.vertical, 8)
+                    .background(.ultraThinMaterial)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                }
+                
+                // Nearby radius slider
                 if nearbyMode {
-                    HStack {
-                        Text("Радиус: \(Int(nearbyRadius))м")
+                    VStack(spacing: 4) {
+                        HStack {
+                            Text("Радиус поиска")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            Text("\(Int(nearbyRadius))м")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundColor(.red)
+                        }
+                        
                         Slider(value: $nearbyRadius, in: 500...5000, step: 500) { _ in
                             refreshPins()
                         }
+                        .accentColor(.red)
                     }
-                    .padding(.horizontal)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
                     .background(.ultraThinMaterial)
-                    .cornerRadius(8)
-                    .padding(.horizontal)
+                    .transition(.move(edge: .top).combined(with: .opacity))
                 }
                 
                 Spacer()
-                MiniAudioPlayerMock().padding()
+                
+                // Audio player
+                MiniAudioPlayerMock()
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 8)
             }
         }
         .onAppear {
@@ -76,6 +149,8 @@ struct MapScreen: View {
                 provider.setUserLocationEnabled(true)
             }
         }
+        .animation(.easeInOut(duration: 0.3), value: showFilters)
+        .animation(.easeInOut(duration: 0.3), value: nearbyMode)
     }
 
     private func loadPOI() async {
@@ -136,32 +211,79 @@ struct MapScreen: View {
     }
 }
 
+struct CategoryChip: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 14, weight: .medium))
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(isSelected ? Color.red : Color.clear)
+                .foregroundColor(isSelected ? .white : .primary)
+                .cornerRadius(20)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(isSelected ? Color.clear : Color.gray.opacity(0.3), lineWidth: 1)
+                )
+        }
+    }
+}
+
 struct MiniAudioPlayerMock: View {
     @State private var isPlaying = false
     @State private var progress: Double = 0.35
     @State private var speed: Double = 1.0
 
     var body: some View {
-        VStack {
-            HStack(spacing: 12) {
-                Button(action: { /* back 10s */ }) { Image(systemName: "gobackward.10") }
+        VStack(spacing: 8) {
+            // Progress bar
+            ProgressView(value: progress)
+                .progressViewStyle(LinearProgressViewStyle(tint: .red))
+            
+            HStack(spacing: 16) {
+                // Control buttons
+                Button(action: { /* back 10s */ }) { 
+                    Image(systemName: "gobackward.10")
+                        .font(.system(size: 18, weight: .medium))
+                }
+                
                 Button(action: { isPlaying.toggle() }) {
                     Image(systemName: isPlaying ? "pause.fill" : "play.fill")
+                        .font(.system(size: 24, weight: .medium))
+                        .foregroundColor(.red)
                 }
-                Button(action: { /* forward 10s */ }) { Image(systemName: "goforward.10") }
+                
+                Button(action: { /* forward 10s */ }) { 
+                    Image(systemName: "goforward.10")
+                        .font(.system(size: 18, weight: .medium))
+                }
+                
                 Spacer()
-                Menu("x\(String(format: "%.1f", speed))") {
+                
+                // Speed and download
+                Menu {
                     Button("0.5x") { speed = 0.5 }
                     Button("1.0x") { speed = 1.0 }
                     Button("1.5x") { speed = 1.5 }
                     Button("2.0x") { speed = 2.0 }
+                } label: {
+                    Text("x\(String(format: "%.1f", speed))")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.secondary)
                 }
-                Button(action: { /* download */ }) { Image(systemName: "arrow.down.circle") }
+                
+                Button(action: { /* download */ }) { 
+                    Image(systemName: "arrow.down.circle")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundColor(.secondary)
+                }
             }
-            .font(.title3)
-            Slider(value: $progress)
         }
-        .padding()
+        .padding(16)
         .background(.ultraThinMaterial)
         .cornerRadius(16)
     }
