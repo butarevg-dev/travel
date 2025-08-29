@@ -1,39 +1,106 @@
 import SwiftUI
 
 struct ProfileScreen: View {
-    @State private var isOffline = true
-    @State private var language = "ru"
-
+    @StateObject private var offlineManager = OfflineManager.shared
+    @State private var showingOfflineAlert = false
+    
     var body: some View {
         NavigationStack {
             Form {
-                Section("Аккаунт") {
+                Section("Оффлайн-режим") {
                     HStack {
-                        Image(systemName: "person.circle").font(.largeTitle)
-                        VStack(alignment: .leading) {
-                            Text("Гость")
-                            Text("Войдите, чтобы синхронизировать избранное").font(.footnote).foregroundColor(.secondary)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Оффлайн-контент")
+                                .font(.system(size: 16, weight: .medium))
+                            if offlineManager.isOfflineModeEnabled {
+                                Text("Версия: \(offlineManager.offlineContentVersion)")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.secondary)
+                                Text("Размер: \(formatFileSize(offlineManager.downloadedSize))")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.secondary)
+                            }
                         }
                         Spacer()
-                        Button("Войти") { /* auth */ }
+                        if offlineManager.isDownloading {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle())
+                        } else {
+                            Button(offlineManager.isOfflineModeEnabled ? "Обновить" : "Загрузить") {
+                                Task {
+                                    await offlineManager.downloadOfflineContent()
+                                }
+                            }
+                            .disabled(offlineManager.isDownloading)
+                        }
+                    }
+                    
+                    if offlineManager.isOfflineModeEnabled {
+                        Button("Удалить оффлайн-контент") {
+                            showingOfflineAlert = true
+                        }
+                        .foregroundColor(.red)
                     }
                 }
+                
                 Section("Настройки") {
-                    Toggle("Оффлайн-режим", isOn: $isOffline)
-                    Picker("Язык", selection: $language) {
-                        Text("Русский").tag("ru")
-                        Text("English").tag("en")
+                    Toggle("Оффлайн-режим", isOn: $offlineManager.isOfflineModeEnabled)
+                        .disabled(offlineManager.isDownloading)
+                    
+                    HStack {
+                        Text("Язык")
+                        Spacer()
+                        Text("Русский")
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    HStack {
+                        Text("Тема")
+                        Spacer()
+                        Text("Системная")
+                            .foregroundColor(.secondary)
                     }
                 }
-                Section("Награды и квесты") {
-                    Text("Бейджи: 0")
-                    Text("Активные квесты: 0")
+                
+                Section("Информация") {
+                    HStack {
+                        Text("Версия приложения")
+                        Spacer()
+                        Text("1.0.0")
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    HStack {
+                        Text("Версия контента")
+                        Spacer()
+                        Text(offlineManager.offlineContentVersion.isEmpty ? "Не загружена" : offlineManager.offlineContentVersion)
+                            .foregroundColor(.secondary)
+                    }
                 }
-                Section("О приложении") {
-                    Text("Версия контента: см. offline/version.json")
+                
+                Section("Аккаунт") {
+                    Button("Выйти") {
+                        // TODO: Implement logout
+                    }
+                    .foregroundColor(.red)
                 }
             }
             .navigationTitle("Профиль")
+            .alert("Удалить оффлайн-контент?", isPresented: $showingOfflineAlert) {
+                Button("Отмена", role: .cancel) { }
+                Button("Удалить", role: .destructive) {
+                    offlineManager.deleteOfflineContent()
+                }
+            } message: {
+                Text("Это действие нельзя отменить. Весь загруженный контент будет удален.")
+            }
         }
+    }
+    
+    private func formatFileSize(_ bytes: Int64) -> String {
+        let formatter = ByteCountFormatter()
+        formatter.allowedUnits = [.useKB, .useMB, .useGB]
+        formatter.countStyle = .file
+        return formatter.string(fromByteCount: bytes)
     }
 }
