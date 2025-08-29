@@ -1,10 +1,20 @@
 import SwiftUI
+import FirebaseCore
 
 @main
 struct SaranskTouristApp: App {
+    init() {
+        FirebaseApp.configure()
+    }
+
     var body: some Scene {
         WindowGroup {
             RootTabs()
+        }
+        .onOpenURL { url in
+            // TODO: forward to GoogleSignIn / VK SDK handlers
+            // GIDSignIn.sharedInstance.handle(url)
+            // VKSdk.processOpen(url, fromApplication: nil)
         }
     }
 }
