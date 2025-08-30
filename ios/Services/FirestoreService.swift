@@ -235,4 +235,114 @@ class FirestoreService {
         let document = try await db.collection("game_states").document(userId).getDocument()
         return try document.data(as: GameState.self)
     }
+    
+    // MARK: - Monetization - Partner Offers
+    func fetchPartnerOffers() async throws -> [PartnerOffer] {
+        do {
+            let snapshot = try await db.collection("partner_offers")
+                .whereField("isActive", isEqualTo: true)
+                .getDocuments()
+            return try snapshot.documents.compactMap { document in
+                try document.data(as: PartnerOffer.self)
+            }
+        } catch {
+            // Fallback to mock data for development
+            return []
+        }
+    }
+    
+    func saveUserOffer(_ userOffer: UserOffer) async throws {
+        try await db.collection("user_offers").document(userOffer.id).setData(from: userOffer)
+    }
+    
+    func updateUserOffer(_ userOffer: UserOffer) async throws {
+        try await db.collection("user_offers").document(userOffer.id).setData(from: userOffer)
+    }
+    
+    func fetchUserOffers(userId: String) async throws -> [UserOffer] {
+        let snapshot = try await db.collection("user_offers")
+            .whereField("userId", isEqualTo: userId)
+            .order(by: "activatedAt", descending: true)
+            .getDocuments()
+        
+        return try snapshot.documents.compactMap { document in
+            try document.data(as: UserOffer.self)
+        }
+    }
+    
+    func updatePartnerOfferUsage(_ offerId: String) async throws {
+        let offerRef = db.collection("partner_offers").document(offerId)
+        try await offerRef.updateData([
+            "currentUses": FieldValue.increment(1)
+        ])
+    }
+    
+    // MARK: - Monetization - Events
+    func fetchEvents() async throws -> [Event] {
+        do {
+            let snapshot = try await db.collection("events")
+                .whereField("isActive", isEqualTo: true)
+                .order(by: "startDate", descending: false)
+                .getDocuments()
+            return try snapshot.documents.compactMap { document in
+                try document.data(as: Event.self)
+            }
+        } catch {
+            // Fallback to mock data for development
+            return []
+        }
+    }
+    
+    func saveUserEvent(_ userEvent: UserEvent) async throws {
+        try await db.collection("user_events").document(userEvent.id).setData(from: userEvent)
+    }
+    
+    func updateUserEvent(_ userEvent: UserEvent) async throws {
+        try await db.collection("user_events").document(userEvent.id).setData(from: userEvent)
+    }
+    
+    func fetchUserEvents(userId: String) async throws -> [UserEvent] {
+        let snapshot = try await db.collection("user_events")
+            .whereField("userId", isEqualTo: userId)
+            .order(by: "registeredAt", descending: true)
+            .getDocuments()
+        
+        return try snapshot.documents.compactMap { document in
+            try document.data(as: UserEvent.self)
+        }
+    }
+    
+    func registerUserForEvent(_ eventId: String) async throws {
+        let eventRef = db.collection("events").document(eventId)
+        try await eventRef.updateData([
+            "currentParticipants": FieldValue.increment(1)
+        ])
+    }
+    
+    func updateEventParticipants(_ eventId: String) async throws {
+        let eventRef = db.collection("events").document(eventId)
+        try await eventRef.updateData([
+            "currentParticipants": FieldValue.increment(1)
+        ])
+    }
+    
+    func decreaseEventParticipants(_ eventId: String) async throws {
+        let eventRef = db.collection("events").document(eventId)
+        try await eventRef.updateData([
+            "currentParticipants": FieldValue.increment(-1)
+        ])
+    }
+    
+    // MARK: - Analytics
+    func saveAnalyticsEvent(_ event: AnalyticsEvent) async throws {
+        try await db.collection("analytics_events").addDocument(from: event)
+    }
+    
+    func savePerformanceMetrics(_ metrics: PerformanceMetrics) async throws {
+        try await db.collection("performance_metrics").addDocument(from: metrics)
+    }
+    
+    func saveAppStoreMetrics(_ metrics: AppStoreMetrics) async throws {
+        try await db.collection("app_store_metrics").addDocument(from: metrics)
+    }
 }

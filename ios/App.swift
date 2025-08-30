@@ -54,6 +54,8 @@ struct RootTabs: View {
                 .tabItem { Label("AR", systemImage: "camera.viewfinder") }
             GamificationScreen()
                 .tabItem { Label("Игра", systemImage: "gamecontroller") }
+            PremiumScreen()
+                .tabItem { Label("Премиум", systemImage: "crown.fill") }
             ProfileScreen()
                 .tabItem { Label("Профиль", systemImage: "person.circle") }
         }
