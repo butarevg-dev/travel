@@ -5,6 +5,7 @@ struct ProfileScreen: View {
     @StateObject private var audioCacheManager = AudioCacheManager.shared
     @StateObject private var authService = AuthService.shared
     @StateObject private var userService = UserService.shared
+    @StateObject private var gamificationService = GamificationService.shared
     @State private var showingOfflineAlert = false
     @State private var showingAudioCacheAlert = false
     @State private var showingSignOutAlert = false
@@ -49,12 +50,35 @@ struct ProfileScreen: View {
                             .foregroundColor(.secondary)
                     }
                     
-                    HStack {
-                        Text("Значки")
-                        Spacer()
-                        Text("\(userService.currentProfile?.badges.count ?? 0)")
-                            .foregroundColor(.secondary)
-                    }
+                                                HStack {
+                                Text("Значки")
+                                Spacer()
+                                Text("\(userService.currentProfile?.badges.count ?? 0)")
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            if let gameState = gamificationService.gameState {
+                                HStack {
+                                    Text("Уровень")
+                                    Spacer()
+                                    Text("\(gameState.level)")
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                HStack {
+                                    Text("Опыт")
+                                    Spacer()
+                                    Text("\(gameState.experience) XP")
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                HStack {
+                                    Text("Монеты")
+                                    Spacer()
+                                    Text("\(gameState.coins)")
+                                        .foregroundColor(.yellow)
+                                }
+                            }
                 }
                 
                 Section("Оффлайн-режим") {

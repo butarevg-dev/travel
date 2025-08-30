@@ -113,4 +113,126 @@ class FirestoreService {
             .getDocuments()
         return try snap.documents.compactMap { try $0.data(as: Quest.self) }
     }
+    
+    // MARK: - Gamification
+    func fetchBadges() async throws -> [Badge] {
+        do {
+            let snapshot = try await db.collection("badges").getDocuments()
+            return try snapshot.documents.compactMap { document in
+                try document.data(as: Badge.self)
+            }
+        } catch {
+            // Fallback to local content
+            return LocalContentService.shared.getBadges()
+        }
+    }
+    
+    func updateBadgeProgress(userId: String, badgeId: String, progress: Double, unlockedAt: Date?) async throws {
+        let data: [String: Any] = [
+            "progress": progress,
+            "unlockedAt": unlockedAt,
+            "lastUpdated": Date()
+        ]
+        try await db.collection("users").document(userId)
+            .collection("badges").document(badgeId).setData(data, merge: true)
+    }
+    
+    func fetchQuests() async throws -> [Quest] {
+        do {
+            let snapshot = try await db.collection("quests").getDocuments()
+            return try snapshot.documents.compactMap { document in
+                try document.data(as: Quest.self)
+            }
+        } catch {
+            // Fallback to local content
+            return LocalContentService.shared.getQuests()
+        }
+    }
+    
+    func startQuest(userId: String, questId: String, startedAt: Date) async throws {
+        let data: [String: Any] = [
+            "startedAt": startedAt,
+            "progress": [
+                "current": 0,
+                "target": 1, // Will be updated with actual target
+                "startedAt": startedAt,
+                "lastUpdated": startedAt
+            ],
+            "lastUpdated": Date()
+        ]
+        try await db.collection("users").document(userId)
+            .collection("quests").document(questId).setData(data, merge: true)
+    }
+    
+    func updateQuestProgress(userId: String, questId: String, progress: Int) async throws {
+        let data: [String: Any] = [
+            "progress.current": progress,
+            "progress.lastUpdated": Date(),
+            "lastUpdated": Date()
+        ]
+        try await db.collection("users").document(userId)
+            .collection("quests").document(questId).updateData(data)
+    }
+    
+    func fetchAchievements() async throws -> [Achievement] {
+        do {
+            let snapshot = try await db.collection("achievements").getDocuments()
+            return try snapshot.documents.compactMap { document in
+                try document.data(as: Achievement.self)
+            }
+        } catch {
+            // Fallback to local content
+            return LocalContentService.shared.getAchievements()
+        }
+    }
+    
+    func unlockAchievement(userId: String, achievementId: String, unlockedAt: Date) async throws {
+        let data: [String: Any] = [
+            "unlockedAt": unlockedAt,
+            "lastUpdated": Date()
+        ]
+        try await db.collection("users").document(userId)
+            .collection("achievements").document(achievementId).setData(data, merge: true)
+    }
+    
+    func addSocialInteraction(_ interaction: SocialInteraction) async throws {
+        try await db.collection("social_interactions").document(interaction.id).setData(from: interaction)
+    }
+    
+    func fetchUserSocialInteractions(userId: String) async throws -> [SocialInteraction] {
+        let snapshot = try await db.collection("social_interactions")
+            .whereField("userId", isEqualTo: userId)
+            .order(by: "createdAt", descending: true)
+            .getDocuments()
+        
+        return try snapshot.documents.compactMap { document in
+            try document.data(as: SocialInteraction.self)
+        }
+    }
+    
+    func fetchLeaderboards() async throws -> [Leaderboard] {
+        do {
+            let snapshot = try await db.collection("leaderboards").getDocuments()
+            return try snapshot.documents.compactMap { document in
+                try document.data(as: Leaderboard.self)
+            }
+        } catch {
+            // Fallback to local content
+            return LocalContentService.shared.getLeaderboards()
+        }
+    }
+    
+    func fetchLeaderboard(_ leaderboardId: String) async throws -> Leaderboard {
+        let document = try await db.collection("leaderboards").document(leaderboardId).getDocument()
+        return try document.data(as: Leaderboard.self)
+    }
+    
+    func saveGameState(_ gameState: GameState) async throws {
+        try await db.collection("game_states").document(gameState.userId).setData(from: gameState)
+    }
+    
+    func fetchGameState(userId: String) async throws -> GameState {
+        let document = try await db.collection("game_states").document(userId).getDocument()
+        return try document.data(as: GameState.self)
+    }
 }
