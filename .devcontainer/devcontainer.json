@@ -1,0 +1,31 @@
+{
+  "name": "Saransk Tourist iOS Development",
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "18"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.vscode-json",
+        "ms-vscode.vscode-yaml",
+        "ms-vscode.vscode-markdown",
+        "ms-vscode.vscode-swift",
+        "ms-vscode.vscode-swift-language",
+        "ms-vscode.vscode-swift-package-manager"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "files.associations": {
+          "*.swift": "swift"
+        }
+      }
+    }
+  },
+  "postCreateCommand": "echo '🚀 Saransk Tourist iOS Development Environment Ready!' && echo '📱 This is a web-based environment for code review and documentation' && echo '💻 For iOS development, use Xcode on macOS' && echo '📚 Check DEVELOPER_GUIDE.md for instructions'",
+  "remoteUser": "vscode"
+}
