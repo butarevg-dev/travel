@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "updatedAt": "2025-08-28T00:00:00Z",
+  "content": {
+    "poi": "content/poi.json",
+    "routes": "content/routes.json"
+  },
+  "media": {
+    "images": [
+      "images/poi/sobornaya-1.jpg",
+      "images/poi/museum-1.jpg"
+    ],
+    "audio": [
+      "audio/poi/sobornaya.m4a",
+      "audio/poi/museum.m4a"
+    ]
+  },
+  "hashes": {
+    "content/poi.json": "<to-fill-ci>",
+    "content/routes.json": "<to-fill-ci>",
+    "images/poi/sobornaya-1.jpg": "<optional>",
+    "images/poi/museum-1.jpg": "<optional>",
+    "audio/poi/sobornaya.m4a": "<optional>",
+    "audio/poi/museum.m4a": "<optional>"
+  }
+}

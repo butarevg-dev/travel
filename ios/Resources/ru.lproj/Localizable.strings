@@ -1,0 +1,51 @@
+// Audio Player Localization - Russian
+
+// General
+"audio_guide" = "Аудиогид";
+"audio_close" = "Закрыть";
+"audio_loading" = "Загрузка аудио...";
+
+// Player Controls
+"audio_play" = "Воспроизвести";
+"audio_pause" = "Пауза";
+"audio_skip_forward" = "Вперед на 10 секунд";
+"audio_skip_backward" = "Назад на 10 секунд";
+"audio_play_pause_hint" = "Воспроизвести или поставить на паузу";
+"audio_skip_forward_hint" = "Перемотать вперед на 10 секунд";
+"audio_skip_backward_hint" = "Перемотать назад на 10 секунд";
+
+// Speed Control
+"audio_speed_control" = "Скорость воспроизведения";
+"audio_speed_title" = "Скорость воспроизведения";
+"audio_speed_05x" = "0.5x";
+"audio_speed_10x" = "1.0x";
+"audio_speed_15x" = "1.5x";
+"audio_speed_20x" = "2.0x";
+"audio_speed_format" = "x%@";
+
+// Download/Delete
+"audio_download" = "Скачать";
+"audio_delete" = "Удалить";
+"audio_download_hint" = "Скачать аудио для оффлайн-прослушивания";
+"audio_delete_hint" = "Удалить скачанный аудио файл";
+
+// Full Player
+"audio_full_player" = "Полноэкранный плеер";
+"audio_full_player_hint" = "Открыть полноэкранный плеер";
+"audio_share" = "Поделиться";
+
+// Progress
+"audio_progress_bar" = "Прогресс воспроизведения";
+"audio_progress_value" = "%@ из %@";
+"audio_current_time" = "Текущее время";
+"audio_total_time" = "Общее время";
+
+// Info
+"audio_title" = "Название аудио";
+"audio_artwork" = "Обложка аудио";
+"audio_poi_label" = "Точка интереса";
+"audio_poi_info" = "POI: %@";
+
+// POI Screen
+"poi_audio_guide" = "Аудиогид";
+"poi_audio_guide_hint" = "Воспроизвести аудиогид для этой точки интереса";

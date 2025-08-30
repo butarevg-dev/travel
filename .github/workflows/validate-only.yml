@@ -1,0 +1,128 @@
+name: Validate Project Only
+
+on:
+  push:
+    branches: [ main, develop, cursor/investigate-expired-development-agent-status-b61b ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate Project Structure
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Check project structure
+      run: |
+        echo "🚀 Checking project structure..."
+        
+        # Check if ios directory exists
+        if [ ! -d "ios" ]; then
+          echo "❌ ios directory not found"
+          exit 1
+        fi
+        echo "✅ ios directory found"
+        
+        # Count Swift files
+        SWIFT_COUNT=$(find ios/ -name "*.swift" | wc -l)
+        echo "📱 Swift files found: $SWIFT_COUNT"
+        
+        if [ $SWIFT_COUNT -lt 40 ]; then
+          echo "⚠️ Expected at least 40 Swift files, found $SWIFT_COUNT"
+        else
+          echo "✅ Swift files count is good"
+        fi
+        
+        # Count documentation files
+        DOC_COUNT=$(find . -name "*.md" | wc -l)
+        echo "📚 Documentation files found: $DOC_COUNT"
+        
+        if [ $DOC_COUNT -lt 30 ]; then
+          echo "⚠️ Expected at least 30 markdown files, found $DOC_COUNT"
+        else
+          echo "✅ Documentation count is good"
+        fi
+        
+        # Check key files
+        KEY_FILES=(
+          "ios/App.swift"
+          "ios/Models/Models.swift"
+          "ios/Services/FirestoreService.swift"
+          "ios/Screens/MapScreen.swift"
+          "content/poi.json"
+          "content/routes.json"
+          "README.md"
+          "DEVELOPER_GUIDE.md"
+          "FUNCTIONALITY_CHECKLIST.md"
+        )
+        
+        echo "🔍 Checking key files..."
+        for file in "${KEY_FILES[@]}"; do
+          if [ -f "$file" ]; then
+            echo "✅ $file"
+          else
+            echo "❌ $file (missing)"
+            exit 1
+          fi
+        done
+        
+        # Check JSON validity
+        echo "🔍 Validating JSON files..."
+        if python3 -m json.tool content/poi.json > /dev/null 2>&1; then
+          echo "✅ poi.json is valid"
+        else
+          echo "❌ poi.json is invalid"
+          exit 1
+        fi
+        
+        if python3 -m json.tool content/routes.json > /dev/null 2>&1; then
+          echo "✅ routes.json is valid"
+        else
+          echo "❌ routes.json is invalid"
+          exit 1
+        fi
+        
+        echo "🎉 All checks passed!"
+        
+    - name: Generate summary
+      run: |
+        echo "# 📊 Project Validation Summary" > VALIDATION_SUMMARY.md
+        echo "" >> VALIDATION_SUMMARY.md
+        echo "## ✅ Status: PASSED" >> VALIDATION_SUMMARY.md
+        echo "" >> VALIDATION_SUMMARY.md
+        echo "### File Counts:" >> VALIDATION_SUMMARY.md
+        echo "- Swift files: $(find ios/ -name "*.swift" | wc -l)" >> VALIDATION_SUMMARY.md
+        echo "- Documentation: $(find . -name "*.md" | wc -l)" >> VALIDATION_SUMMARY.md
+        echo "- JSON files: $(find . -name "*.json" | wc -l)" >> VALIDATION_SUMMARY.md
+        echo "" >> VALIDATION_SUMMARY.md
+        echo "### Key Components:" >> VALIDATION_SUMMARY.md
+        echo "- ✅ iOS App structure" >> VALIDATION_SUMMARY.md
+        echo "- ✅ Models, Services, Screens" >> VALIDATION_SUMMARY.md
+        echo "- ✅ Content files (JSON)" >> VALIDATION_SUMMARY.md
+        echo "- ✅ Documentation" >> VALIDATION_SUMMARY.md
+        echo "" >> VALIDATION_SUMMARY.md
+        echo "### Next Steps:" >> VALIDATION_SUMMARY.md
+        echo "1. Download files using \`./setup-xcode-project.sh\`" >> VALIDATION_SUMMARY.md
+        echo "2. Create Xcode project" >> VALIDATION_SUMMARY.md
+        echo "3. Add files to project" >> VALIDATION_SUMMARY.md
+        echo "4. Configure Firebase" >> VALIDATION_SUMMARY.md
+        echo "5. Run in simulator" >> VALIDATION_SUMMARY.md
+        
+        echo "## 📊 Project Validation Summary"
+        echo ""
+        cat VALIDATION_SUMMARY.md
+        echo ""
+        echo "🎉 Project is ready for Xcode development!"
+        
+    - name: Upload summary
+      uses: actions/upload-artifact@v4
+      with:
+        name: validation-summary
+        path: VALIDATION_SUMMARY.md
