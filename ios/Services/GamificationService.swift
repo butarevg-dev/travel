@@ -993,4 +993,99 @@ class GamificationService: ObservableObject {
         // For now, return true as placeholder
         return true
     }
+    
+    // MARK: - AR Event Handlers
+    func handleARPhotoCapture(_ poiId: String) async {
+        guard let user = authService.currentUser else { return }
+        
+        // Обновление статистики AR
+        await updateARStatistics()
+        
+        // Проверка AR-квестов
+        await checkARQuests(for: poiId)
+        
+        // Проверка AR-достижений
+        await checkARAchievements()
+    }
+    
+    func handleARQuestCompletion(_ questId: String) async {
+        guard let user = authService.currentUser else { return }
+        
+        // Завершение AR-квеста
+        if let quest = quests.first(where: { $0.id == questId }) {
+            await completeQuest(quest)
+        }
+        
+        // Обновление статистики AR
+        await updateARStatistics()
+    }
+    
+    private func updateARStatistics() async {
+        guard var currentState = gameState else { return }
+        
+        // Обновление AR статистики
+        let newStatistics = GameStatistics(
+            totalPOIsVisited: currentState.statistics.totalPOIsVisited,
+            totalRoutesCompleted: currentState.statistics.totalRoutesCompleted,
+            totalDistance: currentState.statistics.totalDistance,
+            totalTime: currentState.statistics.totalTime,
+            totalReviews: currentState.statistics.totalReviews,
+            totalQuestions: currentState.statistics.totalQuestions,
+            totalLikes: currentState.statistics.totalLikes,
+            totalFollowers: currentState.statistics.totalFollowers,
+            consecutiveDays: currentState.statistics.consecutiveDays,
+            longestStreak: currentState.statistics.longestStreak,
+            badgesUnlocked: currentState.statistics.badgesUnlocked,
+            achievementsUnlocked: currentState.statistics.achievementsUnlocked,
+            questsCompleted: currentState.statistics.questsCompleted,
+            specialEventsAttended: currentState.statistics.specialEventsAttended
+        )
+        
+        currentState = GameState(
+            userId: currentState.userId,
+            level: currentState.level,
+            experience: currentState.experience,
+            coins: currentState.coins,
+            badges: currentState.badges,
+            achievements: currentState.achievements,
+            activeQuests: currentState.activeQuests,
+            completedQuests: currentState.completedQuests,
+            statistics: newStatistics,
+            lastUpdated: Date()
+        )
+        
+        do {
+            try await firestoreService.saveGameState(currentState)
+            await MainActor.run {
+                self.gameState = currentState
+            }
+        } catch {
+            self.error = "Ошибка обновления AR статистики: \(error.localizedDescription)"
+        }
+    }
+    
+    private func checkARQuests(for poiId: String) async {
+        // Проверка AR-квестов для данного POI
+        for quest in quests where quest.type == .arQuest && !quest.isCompleted {
+            if let poiIds = quest.requirements.specificPOIs, poiIds.contains(poiId) {
+                // Обновление прогресса квеста
+                await updateQuestProgress(quest.id, progress: quest.progress + 1)
+            }
+        }
+    }
+    
+    private func checkARAchievements() async {
+        // Проверка AR-достижений
+        for achievement in achievements where !achievement.isUnlocked {
+            if achievement.category == .ar {
+                // Проверка условий достижения
+                await checkAchievementConditions(achievement)
+            }
+        }
+    }
+    
+    private func checkAchievementConditions(_ achievement: Achievement) async {
+        // Проверка условий для разблокировки достижения
+        // Здесь будет логика проверки различных типов достижений
+    }
 }

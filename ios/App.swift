@@ -50,6 +50,8 @@ struct RootTabs: View {
                 .tabItem { Label("Маршруты", systemImage: "point.topleft.down.curvedto.point.bottomright.up") }
             POIScreen()
                 .tabItem { Label("Каталог", systemImage: "list.bullet") }
+            ARScreen()
+                .tabItem { Label("AR", systemImage: "camera.viewfinder") }
             GamificationScreen()
                 .tabItem { Label("Игра", systemImage: "gamecontroller") }
             ProfileScreen()

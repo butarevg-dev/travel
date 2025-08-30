@@ -202,4 +202,91 @@ class LocalContentService {
             )
         ]
     }
+    
+    // MARK: - AR Quests
+    func getARQuests() -> [ARQuest] {
+        return [
+            ARQuest(
+                id: "ar_quest_1",
+                title: "AR Фотограф",
+                description: "Сфотографируйте 3 достопримечательности в AR режиме",
+                type: .photoPOI,
+                requirements: ARQuestRequirements(
+                    poiIds: ["sobornaya", "museum", "theater"],
+                    routeIds: nil,
+                    photoCount: 3,
+                    timeLimit: 3600, // 1 час
+                    distance: nil,
+                    arMode: .poiDetection,
+                    specificPOIs: ["sobornaya", "museum", "theater"],
+                    specificRoutes: nil
+                ),
+                reward: QuestReward(
+                    experience: 100,
+                    coins: 50,
+                    points: 200,
+                    premiumDays: 0
+                ),
+                poiId: nil,
+                routeId: nil,
+                isCompleted: false,
+                isStarted: false,
+                progress: 0
+            ),
+            ARQuest(
+                id: "ar_quest_2",
+                title: "AR Навигатор",
+                description: "Пройдите маршрут используя AR навигацию",
+                type: .arNavigation,
+                requirements: ARQuestRequirements(
+                    poiIds: nil,
+                    routeIds: ["route_1"],
+                    photoCount: nil,
+                    timeLimit: 7200, // 2 часа
+                    distance: 2.0,
+                    arMode: .navigation,
+                    specificPOIs: nil,
+                    specificRoutes: ["route_1"]
+                ),
+                reward: QuestReward(
+                    experience: 150,
+                    coins: 75,
+                    points: 300,
+                    premiumDays: 1
+                ),
+                poiId: nil,
+                routeId: "route_1",
+                isCompleted: false,
+                isStarted: false,
+                progress: 0
+            ),
+            ARQuest(
+                id: "ar_quest_3",
+                title: "AR Аудиофил",
+                description: "Прослушайте 5 аудиогидов в AR режиме",
+                type: .audio,
+                requirements: ARQuestRequirements(
+                    poiIds: nil,
+                    routeIds: nil,
+                    photoCount: nil,
+                    timeLimit: 1800, // 30 минут
+                    distance: nil,
+                    arMode: .audio,
+                    specificPOIs: nil,
+                    specificRoutes: nil
+                ),
+                reward: QuestReward(
+                    experience: 80,
+                    coins: 40,
+                    points: 160,
+                    premiumDays: 0
+                ),
+                poiId: nil,
+                routeId: nil,
+                isCompleted: false,
+                isStarted: false,
+                progress: 0
+            )
+        ]
+    }
 }
