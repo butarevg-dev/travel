@@ -24,14 +24,20 @@ class MapKitProvider: NSObject, ObservableObject {
     private var annotations: [MapPOIAnnotation] = []
     private var polylines: [MapRoutePolyline] = []
     private var userLocationEnabled = false
+    private var onPOITap: ((String) -> Void)?
     
     func representable() -> MapKitView {
         MapKitView(
             region: $region,
             annotations: annotations,
             polylines: polylines,
-            userLocationEnabled: userLocationEnabled
+            userLocationEnabled: userLocationEnabled,
+            onPOITap: onPOITap
         )
+    }
+    
+    func setOnPOITap(_ callback: @escaping (String) -> Void) {
+        self.onPOITap = callback
     }
     
     func setAnnotations(_ annotations: [MapPOIAnnotation]) {
@@ -59,6 +65,7 @@ struct MapKitView: UIViewRepresentable {
     let annotations: [MapPOIAnnotation]
     let polylines: [MapRoutePolyline]
     let userLocationEnabled: Bool
+    let onPOITap: ((String) -> Void)?
     
     func makeUIView(context: Context) -> MKMapView {
         let mapView = MKMapView()
@@ -94,6 +101,51 @@ struct MapKitView: UIViewRepresentable {
     
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
+    }
+    
+    class Coordinator: NSObject, MKMapViewDelegate {
+        var parent: MapKitView
+        
+        init(_ parent: MapKitView) {
+            self.parent = parent
+        }
+        
+        func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+            guard !annotation.isKind(of: MKUserLocation.self) else { return nil }
+            
+            let identifier = "POIAnnotation"
+            var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? MKMarkerAnnotationView
+            
+            if annotationView == nil {
+                annotationView = MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: identifier)
+                annotationView?.canShowCallout = true
+                annotationView?.markerTintColor = .red
+            } else {
+                annotationView?.annotation = annotation
+            }
+            
+            return annotationView
+        }
+        
+        func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+            if let polyline = overlay as? MKPolyline {
+                let renderer = MKPolylineRenderer(polyline: polyline)
+                renderer.strokeColor = .red
+                renderer.lineWidth = 4
+                renderer.alpha = 0.8
+                return renderer
+            }
+            return MKOverlayRenderer(overlay: overlay)
+        }
+        
+        func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
+            guard let annotation = view.annotation,
+                  !annotation.isKind(of: MKUserLocation.self),
+                  let poiId = annotation.title else { return }
+            
+            // Call the callback with POI ID
+            parent.onPOITap?(poiId)
+        }
     }
     
     class Coordinator: NSObject, MKMapViewDelegate {

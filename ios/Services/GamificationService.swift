@@ -666,4 +666,331 @@ class GamificationService: ObservableObject {
             quest.isCompleted
         }
     }
+    
+    // MARK: - Event Handlers
+    func handlePOIVisit(_ poiId: String) async {
+        guard let user = authService.currentUser else { return }
+        
+        // Update game statistics
+        await updatePOIVisitStatistics()
+        
+        // Check and update badges
+        await checkAndUpdateBadgesForPOIVisit(poiId: poiId)
+        
+        // Check and update quests
+        await checkAndUpdateQuestsForPOIVisit(poiId: poiId)
+        
+        // Check and update achievements
+        await checkAndUpdateAchievementsForPOIVisit()
+    }
+    
+    func handleRouteCompletion(_ routeId: String) async {
+        guard let user = authService.currentUser else { return }
+        
+        // Update game statistics
+        await updateRouteCompletionStatistics(routeId: routeId)
+        
+        // Check and update badges
+        await checkAndUpdateBadgesForRouteCompletion(routeId: routeId)
+        
+        // Check and update quests
+        await checkAndUpdateQuestsForRouteCompletion(routeId: routeId)
+        
+        // Check and update achievements
+        await checkAndUpdateAchievementsForRouteCompletion()
+    }
+    
+    // MARK: - Badge Event Handlers
+    private func checkAndUpdateBadgesForPOIVisit(poiId: String) async {
+        for badge in badges {
+            guard !badge.isUnlocked else { continue }
+            
+            switch badge.requirements.type {
+            case .visitPOIs:
+                await updateBadgeProgressForPOIVisit(badge: badge, poiId: poiId)
+            case .totalDistance:
+                await updateBadgeProgressForDistance(badge: badge)
+            case .totalTime:
+                await updateBadgeProgressForTime(badge: badge)
+            default:
+                break
+            }
+        }
+    }
+    
+    private func checkAndUpdateBadgesForRouteCompletion(routeId: String) async {
+        for badge in badges {
+            guard !badge.isUnlocked else { continue }
+            
+            switch badge.requirements.type {
+            case .completeRoutes:
+                await updateBadgeProgressForRouteCompletion(badge: badge, routeId: routeId)
+            case .totalDistance:
+                await updateBadgeProgressForDistance(badge: badge)
+            case .totalTime:
+                await updateBadgeProgressForTime(badge: badge)
+            default:
+                break
+            }
+        }
+    }
+    
+    private func updateBadgeProgressForPOIVisit(badge: Badge, poiId: String) async {
+        guard let currentState = gameState else { return }
+        
+        // Check if specific POIs are required
+        if let specificPOIs = badge.requirements.specificPOIs {
+            guard specificPOIs.contains(poiId) else { return }
+        }
+        
+        // Calculate current progress
+        let currentVisits = currentState.statistics.totalPOIsVisited
+        let targetVisits = badge.requirements.target
+        let newProgress = min(1.0, Double(currentVisits) / Double(targetVisits))
+        
+        // Update badge progress
+        await updateBadgeProgress(badge.id, progress: newProgress)
+    }
+    
+    private func updateBadgeProgressForRouteCompletion(badge: Badge, routeId: String) async {
+        guard let currentState = gameState else { return }
+        
+        // Check if specific routes are required
+        if let specificRoutes = badge.requirements.specificRoutes {
+            guard specificRoutes.contains(routeId) else { return }
+        }
+        
+        // Calculate current progress
+        let currentRoutes = currentState.statistics.totalRoutesCompleted
+        let targetRoutes = badge.requirements.target
+        let newProgress = min(1.0, Double(currentRoutes) / Double(targetRoutes))
+        
+        // Update badge progress
+        await updateBadgeProgress(badge.id, progress: newProgress)
+    }
+    
+    private func updateBadgeProgressForDistance(badge: Badge) async {
+        guard let currentState = gameState else { return }
+        
+        let currentDistance = currentState.statistics.totalDistance
+        let targetDistance = Double(badge.requirements.target)
+        let newProgress = min(1.0, currentDistance / targetDistance)
+        
+        await updateBadgeProgress(badge.id, progress: newProgress)
+    }
+    
+    private func updateBadgeProgressForTime(badge: Badge) async {
+        guard let currentState = gameState else { return }
+        
+        let currentTime = currentState.statistics.totalTime
+        let targetTime = TimeInterval(badge.requirements.target * 3600) // Convert hours to seconds
+        let newProgress = min(1.0, currentTime / targetTime)
+        
+        await updateBadgeProgress(badge.id, progress: newProgress)
+    }
+    
+    // MARK: - Quest Event Handlers
+    private func checkAndUpdateQuestsForPOIVisit(poiId: String) async {
+        for quest in quests {
+            guard quest.isStarted && !quest.isCompleted else { continue }
+            
+            switch quest.requirements.type {
+            case .visitPOIs:
+                await updateQuestProgressForPOIVisit(quest: quest, poiId: poiId)
+            case .takePhotos:
+                // Will be handled by photo capture event
+                break
+            default:
+                break
+            }
+        }
+    }
+    
+    private func checkAndUpdateQuestsForRouteCompletion(routeId: String) async {
+        for quest in quests {
+            guard quest.isStarted && !quest.isCompleted else { continue }
+            
+            switch quest.requirements.type {
+            case .completeRoutes:
+                await updateQuestProgressForRouteCompletion(quest: quest, routeId: routeId)
+            default:
+                break
+            }
+        }
+    }
+    
+    private func updateQuestProgressForPOIVisit(quest: Quest, poiId: String) async {
+        // Check if specific POIs are required
+        if let specificPOIs = quest.requirements.specificPOIs {
+            guard specificPOIs.contains(poiId) else { return }
+        }
+        
+        // Check time of day requirement
+        if let timeOfDay = quest.requirements.timeOfDay {
+            guard isCurrentTimeInRange(timeOfDay) else { return }
+        }
+        
+        // Check weather condition requirement
+        if let weatherCondition = quest.requirements.weatherCondition {
+            guard await isCurrentWeatherMatching(weatherCondition) else { return }
+        }
+        
+        // Update quest progress
+        let newProgress = quest.progress.current + 1
+        await updateQuestProgress(quest.id, progress: newProgress)
+    }
+    
+    private func updateQuestProgressForRouteCompletion(quest: Quest, routeId: String) async {
+        // Check if specific routes are required
+        if let specificRoutes = quest.requirements.specificRoutes {
+            guard specificRoutes.contains(routeId) else { return }
+        }
+        
+        // Update quest progress
+        let newProgress = quest.progress.current + 1
+        await updateQuestProgress(quest.id, progress: newProgress)
+    }
+    
+    // MARK: - Achievement Event Handlers
+    private func checkAndUpdateAchievementsForPOIVisit() async {
+        for achievement in achievements {
+            guard !achievement.isUnlocked else { continue }
+            
+            if let progress = achievement.progress {
+                // Check if achievement should be unlocked
+                if progress.isCompleted {
+                    await unlockAchievement(achievement.id)
+                }
+            }
+        }
+    }
+    
+    private func checkAndUpdateAchievementsForRouteCompletion() async {
+        for achievement in achievements {
+            guard !achievement.isUnlocked else { continue }
+            
+            if let progress = achievement.progress {
+                // Check if achievement should be unlocked
+                if progress.isCompleted {
+                    await unlockAchievement(achievement.id)
+                }
+            }
+        }
+    }
+    
+    // MARK: - Statistics Update
+    private func updatePOIVisitStatistics() async {
+        guard var currentState = gameState else { return }
+        
+        let newStatistics = GameStatistics(
+            totalPOIsVisited: currentState.statistics.totalPOIsVisited + 1,
+            totalRoutesCompleted: currentState.statistics.totalRoutesCompleted,
+            totalDistance: currentState.statistics.totalDistance,
+            totalTime: currentState.statistics.totalTime,
+            totalReviews: currentState.statistics.totalReviews,
+            totalQuestions: currentState.statistics.totalQuestions,
+            totalLikes: currentState.statistics.totalLikes,
+            totalFollowers: currentState.statistics.totalFollowers,
+            consecutiveDays: currentState.statistics.consecutiveDays,
+            longestStreak: currentState.statistics.longestStreak,
+            badgesUnlocked: currentState.statistics.badgesUnlocked,
+            achievementsUnlocked: currentState.statistics.achievementsUnlocked,
+            questsCompleted: currentState.statistics.questsCompleted,
+            specialEventsAttended: currentState.statistics.specialEventsAttended
+        )
+        
+        currentState = GameState(
+            userId: currentState.userId,
+            level: currentState.level,
+            experience: currentState.experience,
+            coins: currentState.coins,
+            badges: currentState.badges,
+            achievements: currentState.achievements,
+            activeQuests: currentState.activeQuests,
+            completedQuests: currentState.completedQuests,
+            statistics: newStatistics,
+            lastUpdated: Date()
+        )
+        
+        do {
+            try await firestoreService.saveGameState(currentState)
+            await MainActor.run {
+                self.gameState = currentState
+            }
+        } catch {
+            self.error = "Ошибка обновления статистики: \(error.localizedDescription)"
+        }
+    }
+    
+    private func updateRouteCompletionStatistics(routeId: String) async {
+        guard var currentState = gameState else { return }
+        
+        // Get route details for distance and time calculation
+        let route = try? await firestoreService.fetchRoute(id: routeId)
+        let routeDistance = route?.distanceKm ?? 0
+        let routeTime = TimeInterval((route?.durationMinutes ?? 0) * 60)
+        
+        let newStatistics = GameStatistics(
+            totalPOIsVisited: currentState.statistics.totalPOIsVisited,
+            totalRoutesCompleted: currentState.statistics.totalRoutesCompleted + 1,
+            totalDistance: currentState.statistics.totalDistance + routeDistance,
+            totalTime: currentState.statistics.totalTime + routeTime,
+            totalReviews: currentState.statistics.totalReviews,
+            totalQuestions: currentState.statistics.totalQuestions,
+            totalLikes: currentState.statistics.totalLikes,
+            totalFollowers: currentState.statistics.totalFollowers,
+            consecutiveDays: currentState.statistics.consecutiveDays,
+            longestStreak: currentState.statistics.longestStreak,
+            badgesUnlocked: currentState.statistics.badgesUnlocked,
+            achievementsUnlocked: currentState.statistics.achievementsUnlocked,
+            questsCompleted: currentState.statistics.questsCompleted,
+            specialEventsAttended: currentState.statistics.specialEventsAttended
+        )
+        
+        currentState = GameState(
+            userId: currentState.userId,
+            level: currentState.level,
+            experience: currentState.experience,
+            coins: currentState.coins,
+            badges: currentState.badges,
+            achievements: currentState.achievements,
+            activeQuests: currentState.activeQuests,
+            completedQuests: currentState.completedQuests,
+            statistics: newStatistics,
+            lastUpdated: Date()
+        )
+        
+        do {
+            try await firestoreService.saveGameState(currentState)
+            await MainActor.run {
+                self.gameState = currentState
+            }
+        } catch {
+            self.error = "Ошибка обновления статистики: \(error.localizedDescription)"
+        }
+    }
+    
+    // MARK: - Helper Functions
+    private func isCurrentTimeInRange(_ timeOfDay: QuestRequirements.TimeOfDay) -> Bool {
+        let calendar = Calendar.current
+        let now = Date()
+        let hour = calendar.component(.hour, from: now)
+        
+        switch timeOfDay {
+        case .morning:
+            return hour >= 6 && hour < 12
+        case .afternoon:
+            return hour >= 12 && hour < 18
+        case .evening:
+            return hour >= 18 && hour < 22
+        case .night:
+            return hour >= 22 || hour < 6
+        }
+    }
+    
+    private func isCurrentWeatherMatching(_ weatherCondition: QuestRequirements.WeatherCondition) async -> Bool {
+        // This would integrate with a weather service
+        // For now, return true as placeholder
+        return true
+    }
 }

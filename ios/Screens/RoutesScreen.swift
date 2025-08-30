@@ -3,6 +3,7 @@ import SwiftUI
 struct RoutesScreen: View {
     @StateObject private var viewModel = RoutesViewModel()
     @StateObject private var routeBuilder = RouteBuilderService.shared
+    @StateObject private var gamificationService = GamificationService.shared
     @State private var searchText = ""
     @State private var selectedPresetType: RouteBuilderService.PresetRouteType? = nil
     @State private var showingCustomRouteBuilder = false

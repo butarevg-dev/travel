@@ -5,6 +5,7 @@ struct RouteDetailScreen: View {
     let route: Route
     @StateObject private var routeBuilder = RouteBuilderService.shared
     @StateObject private var locationService = LocationService.shared
+    @StateObject private var gamificationService = GamificationService.shared
     @State private var currentStepIndex = 0
     @State private var showingShareSheet = false
     @State private var showingCustomization = false
@@ -90,6 +91,17 @@ struct RouteDetailScreen: View {
     private func updateProgress() {
         guard !route.stops.isEmpty else { return }
         routeProgress = Double(currentStepIndex) / Double(route.stops.count - 1)
+        
+        // Check if route is completed
+        if currentStepIndex >= route.stops.count - 1 {
+            handleRouteCompletion()
+        }
+    }
+    
+    private func handleRouteCompletion() {
+        Task {
+            await gamificationService.handleRouteCompletion(route.id)
+        }
     }
     
     private func startRoute() {

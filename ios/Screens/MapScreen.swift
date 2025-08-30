@@ -4,6 +4,7 @@ import CoreLocation
 struct MapScreen: View {
     @StateObject private var provider = MapKitProvider()
     @StateObject private var locationService = LocationService.shared
+    @StateObject private var gamificationService = GamificationService.shared
     @State private var pois: [POI] = []
     @State private var routes: [Route] = []
     @State private var categoryFilter: String? = nil
@@ -17,6 +18,9 @@ struct MapScreen: View {
         ZStack(alignment: .top) {
             provider.representable()
                 .ignoresSafeArea()
+                .onAppear {
+                    setupPOITapHandler()
+                }
             
             VStack(spacing: 0) {
                 // Top controls
@@ -289,6 +293,14 @@ struct MapScreen: View {
 
     private func centerOnSaransk() {
         provider.setRegion(center: CLLocationCoordinate2D(latitude: 54.1834, longitude: 45.1749), spanDegrees: 0.12)
+    }
+    
+    private func setupPOITapHandler() {
+        provider.setOnPOITap { poiId in
+            Task {
+                await gamificationService.handlePOIVisit(poiId)
+            }
+        }
     }
 }
 

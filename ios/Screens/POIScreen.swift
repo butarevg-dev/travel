@@ -3,6 +3,7 @@ import SwiftUI
 struct POIScreen: View {
     @StateObject private var viewModel = POIViewModel()
     @StateObject private var userService = UserService.shared
+    @StateObject private var gamificationService = GamificationService.shared
     @State private var searchText = ""
     @State private var selectedCategory: String? = nil
     @State private var showFavoritesOnly = false
@@ -162,6 +163,7 @@ struct POIDetailView: View {
     let poi: POI
     @ObservedObject var viewModel: POIViewModel
     @StateObject private var audioService = AudioPlayerService.shared
+    @StateObject private var gamificationService = GamificationService.shared
     @State private var rating: Int = 0
     @State private var comment: String = ""
     
@@ -190,7 +192,12 @@ struct POIDetailView: View {
                             .font(.title2)
                             .fontWeight(.bold)
                         Spacer()
-                        Button(action: { viewModel.toggleFavorite(poi.id) }) {
+                        Button(action: { 
+                            viewModel.toggleFavorite(poi.id)
+                            Task {
+                                await gamificationService.likePOI(poi.id)
+                            }
+                        }) {
                             Image(systemName: viewModel.favorites.contains(poi.id) ? "heart.fill" : "heart")
                                 .font(.title2)
                                 .foregroundColor(viewModel.favorites.contains(poi.id) ? .red : .gray)
@@ -282,8 +289,12 @@ struct POIDetailView: View {
                             .lineLimit(3...6)
                         
                         Button("Отправить") {
-                            // TODO: Submit comment
-                            comment = ""
+                            Task {
+                                // TODO: Submit comment to ReviewService
+                                // For now, just trigger gamification event
+                                await gamificationService.likePOI(poi.id)
+                                comment = ""
+                            }
                         }
                         .disabled(comment.isEmpty)
                     }
