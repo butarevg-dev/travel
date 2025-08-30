@@ -7,6 +7,10 @@ on:
     branches: [ main, develop ]
   workflow_dispatch: # Allows manual trigger
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   simple-validation:
     name: Simple Project Validation
@@ -136,12 +140,20 @@ jobs:
       uses: actions/github-script@v7
       with:
         script: |
-          const fs = require('fs');
-          const summary = fs.readFileSync('SIMPLE_CHECK_SUMMARY.md', 'utf8');
-          
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: `## 📊 Simple Project Check Summary\n\n${summary}\n\n🎉 Project is ready for Xcode development!`
-          });
+          try {
+            const fs = require('fs');
+            const summary = fs.readFileSync('SIMPLE_CHECK_SUMMARY.md', 'utf8');
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 📊 Simple Project Check Summary\n\n${summary}\n\n🎉 Project is ready for Xcode development!`
+            });
+            
+            console.log('✅ Comment posted successfully');
+          } catch (error) {
+            console.log('⚠️ Could not post comment:', error.message);
+            console.log('📊 Summary content:');
+            console.log(fs.readFileSync('SIMPLE_CHECK_SUMMARY.md', 'utf8'));
+          }

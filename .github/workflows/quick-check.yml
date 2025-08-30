@@ -7,6 +7,10 @@ on:
     branches: [ main, develop ]
   workflow_dispatch: # Allows manual trigger
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   quick-validation:
     name: Quick Project Validation
@@ -134,12 +138,20 @@ jobs:
       uses: actions/github-script@v7
       with:
         script: |
-          const fs = require('fs');
-          const report = fs.readFileSync('QUICK_VALIDATION_REPORT.md', 'utf8');
-          
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: `## 📊 Quick Project Validation Report\n\n${report}\n\n✅ All checks passed!`
-          });
+          try {
+            const fs = require('fs');
+            const report = fs.readFileSync('QUICK_VALIDATION_REPORT.md', 'utf8');
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 📊 Quick Project Validation Report\n\n${report}\n\n✅ All checks passed!`
+            });
+            
+            console.log('✅ Comment posted successfully');
+          } catch (error) {
+            console.log('⚠️ Could not post comment:', error.message);
+            console.log('📊 Report content:');
+            console.log(fs.readFileSync('QUICK_VALIDATION_REPORT.md', 'utf8'));
+          }
