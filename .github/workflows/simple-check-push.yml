@@ -1,15 +1,13 @@
-name: Simple Project Check
+name: Simple Project Check (Push)
 
 on:
   push:
     branches: [ main, develop, cursor/investigate-expired-development-agent-status-b61b ]
-  pull_request:
-    branches: [ main, develop ]
-  workflow_dispatch: # Allows manual trigger
+  workflow_dispatch:
 
 permissions:
   contents: read
-  pull-requests: write
+  issues: write
 
 jobs:
   simple-validation:
@@ -124,11 +122,11 @@ jobs:
         name: simple-check-summary
         path: SIMPLE_CHECK_SUMMARY.md
 
-  comment-summary:
-    name: Comment Summary on PR
+  create-issue:
+    name: Create Issue with Results
     runs-on: ubuntu-latest
     needs: simple-validation
-    if: github.event_name == 'pull_request' && github.event.pull_request.user.login != 'github-actions[bot]'
+    if: github.event_name == 'push'
     
     steps:
     - name: Download summary
@@ -136,13 +134,25 @@ jobs:
       with:
         name: simple-check-summary
         
-    - name: Show Summary in Logs
-      run: |
-        echo "## 📊 Simple Project Check Summary"
-        echo ""
-        cat SIMPLE_CHECK_SUMMARY.md
-        echo ""
-        echo "🎉 Project is ready for Xcode development!"
-        echo ""
-        echo "📝 Note: PR comments are disabled due to security restrictions."
-        echo "📊 Check the workflow logs above for detailed results."
+    - name: Create Issue
+      uses: actions/github-script@v7
+      with:
+        script: |
+          try {
+            const fs = require('fs');
+            const summary = fs.readFileSync('SIMPLE_CHECK_SUMMARY.md', 'utf8');
+            
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `📊 Project Check Results - ${new Date().toLocaleDateString()}`,
+              body: `## 📊 Simple Project Check Summary\n\n${summary}\n\n🎉 Project is ready for Xcode development!\n\n**Branch:** ${context.ref}\n**Commit:** ${context.sha.substring(0, 7)}`,
+              labels: ['project-check', 'success']
+            });
+            
+            console.log('✅ Issue created successfully:', issue.data.html_url);
+          } catch (error) {
+            console.log('⚠️ Could not create issue:', error.message);
+            console.log('📊 Summary content:');
+            console.log(fs.readFileSync('SIMPLE_CHECK_SUMMARY.md', 'utf8'));
+          }
