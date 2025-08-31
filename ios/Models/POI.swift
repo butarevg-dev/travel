@@ -8,6 +8,7 @@ struct POI: Identifiable, Codable {
     let address: String
     let category: String
     let imageUrl: String
+    let audioUrl: String
     let latitude: Double
     let longitude: Double
     let rating: Double
@@ -65,13 +66,14 @@ struct POI: Identifiable, Codable {
         isFavorite = try container.decode(Bool.self, forKey: .isFavorite)
     }
     
-    init(id: String, name: String, description: String, address: String, category: String, imageUrl: String, latitude: Double, longitude: Double, rating: Double, distance: Double, popularity: Int, workingHours: String? = nil, price: String? = nil, phone: String? = nil, website: String? = nil, tags: [String] = [], isFavorite: Bool = false) {
+    init(id: String, name: String, description: String, address: String, category: String, imageUrl: String, audioUrl: String = "", latitude: Double, longitude: Double, rating: Double, distance: Double, popularity: Int, workingHours: String? = nil, price: String? = nil, phone: String? = nil, website: String? = nil, tags: [String] = [], isFavorite: Bool = false) {
         self.id = id
         self.name = name
         self.description = description
         self.address = address
         self.category = category
         self.imageUrl = imageUrl
+        self.audioUrl = audioUrl
         self.latitude = latitude
         self.longitude = longitude
         self.rating = rating
