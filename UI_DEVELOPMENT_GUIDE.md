@@ -82,21 +82,29 @@
 - **iPhone 15/15 Pro:** 852×393 (@3x)
 - **iPhone 15 Plus/15 Pro Max:** 932×430 (@3x)
 
-**iPad (Portrait):**
-- **iPad (9th gen):** 810×1080
-- **iPad (10th gen):** 820×1180
-- **iPad Air (4th gen):** 820×1180
-- **iPad Air (5th gen):** 820×1180
-- **iPad Pro 11" (1st-4th gen):** 834×1194
-- **iPad Pro 12.9" (1st-6th gen):** 1024×1366
+**iPad (Portrait - пиксели):**
+- **iPad (9th gen):** 1620×2160
+- **iPad (10th gen):** 1640×2360
+- **iPad Air (4th gen):** 1640×2360
+- **iPad Air (5th gen):** 1640×2360
+- **iPad Pro 11" (1st-4th gen):** 1668×2388
+- **iPad Pro 12.9" (1st-6th gen):** 2048×2732
 
-**iPad (Landscape):**
-- **iPad (9th gen):** 1080×810
-- **iPad (10th gen):** 1180×820
-- **iPad Air (4th gen):** 1180×820
-- **iPad Air (5th gen):** 1180×820
-- **iPad Pro 11" (1st-4th gen):** 1194×834
-- **iPad Pro 12.9" (1st-6th gen):** 1366×1024
+**iPad (Portrait - points):**
+- **iPad (9th gen):** 810×1080 (@2x)
+- **iPad (10th gen):** 820×1180 (@2x)
+- **iPad Air (4th gen):** 820×1180 (@2x)
+- **iPad Air (5th gen):** 820×1180 (@2x)
+- **iPad Pro 11" (1st-4th gen):** 834×1194 (@2x)
+- **iPad Pro 12.9" (1st-6th gen):** 1024×1366 (@2x)
+
+**iPad (Landscape - points):**
+- **iPad (9th gen):** 1080×810 (@2x)
+- **iPad (10th gen):** 1180×820 (@2x)
+- **iPad Air (4th gen):** 1180×820 (@2x)
+- **iPad Air (5th gen):** 1180×820 (@2x)
+- **iPad Pro 11" (1st-4th gen):** 1194×834 (@2x)
+- **iPad Pro 12.9" (1st-6th gen):** 1366×1024 (@2x)
 
 #### Принципы адаптивности:
 - **Responsive Design** — адаптация под размер экрана
@@ -122,6 +130,12 @@
 - **iPhone Landscape:** 750×1334 - 1290×2796
 - **iPad Portrait:** 1620×2160 - 2048×2732
 - **iPad Landscape:** 2160×1620 - 2732×2048
+
+#### Диапазоны размеров (points):
+- **iPhone Portrait:** 375×667 - 430×932
+- **iPhone Landscape:** 667×375 - 932×430
+- **iPad Portrait:** 810×1080 - 1024×1366
+- **iPad Landscape:** 1080×810 - 1366×1024
 
 #### Scale Factors:
 - **iPhone:** 2x, 3x (@2x, @3x)
