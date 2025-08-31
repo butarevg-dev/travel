@@ -12,7 +12,18 @@ class FirestoreService {
     func fetchPOIList() async throws -> [POI] {
         do {
             let snap = try await db.collection("poi").getDocuments()
-            return try snap.documents.compactMap { try $0.data(as: POI.self) }
+            let pois = try snap.documents.compactMap { doc -> POI? in
+                // Try new POI format first
+                if let newPOI = try? doc.data(as: POI.self) {
+                    return newPOI
+                }
+                // Fallback to legacy format
+                if let legacyPOI = try? doc.data(as: LegacyPOI.self) {
+                    return POIAdapter.toNewPOI(legacyPOI)
+                }
+                return nil
+            }
+            return pois
         } catch {
             // Fallback to local content if Firebase fails
             return LocalContentService.shared.loadPOIs()
@@ -22,7 +33,15 @@ class FirestoreService {
     func fetchPOI(id: String) async throws -> POI? {
         do {
             let doc = try await db.collection("poi").document(id).getDocument()
-            return try doc.data(as: POI.self)
+            // Try new POI format first
+            if let newPOI = try? doc.data(as: POI.self) {
+                return newPOI
+            }
+            // Fallback to legacy format
+            if let legacyPOI = try? doc.data(as: LegacyPOI.self) {
+                return POIAdapter.toNewPOI(legacyPOI)
+            }
+            return nil
         } catch {
             return LocalContentService.shared.loadPOIs().first { $0.id == id }
         }

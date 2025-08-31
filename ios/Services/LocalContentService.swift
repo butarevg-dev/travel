@@ -11,8 +11,19 @@ class LocalContentService {
             return []
         }
         
-        struct Wrapper: Decodable { let items: [POI] }
-        return (try? JSONDecoder().decode(Wrapper.self, from: data))?.items ?? []
+        // Try to decode as new POI format first
+        struct NewWrapper: Decodable { let items: [POI] }
+        if let newPOIs = try? JSONDecoder().decode(NewWrapper.self, from: data) {
+            return newPOIs.items
+        }
+        
+        // Fallback to legacy format
+        struct LegacyWrapper: Decodable { let items: [LegacyPOI] }
+        if let legacyPOIs = try? JSONDecoder().decode(LegacyWrapper.self, from: data) {
+            return legacyPOIs.items.map { POIAdapter.toNewPOI($0) }
+        }
+        
+        return []
     }
     
     func loadRoutes() -> [Route] {
