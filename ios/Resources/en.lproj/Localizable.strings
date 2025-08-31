@@ -1,0 +1,51 @@
+// Audio Player Localization - English
+
+// General
+"audio_guide" = "Audio Guide";
+"audio_close" = "Close";
+"audio_loading" = "Loading audio...";
+
+// Player Controls
+"audio_play" = "Play";
+"audio_pause" = "Pause";
+"audio_skip_forward" = "Forward 10 seconds";
+"audio_skip_backward" = "Backward 10 seconds";
+"audio_play_pause_hint" = "Play or pause audio";
+"audio_skip_forward_hint" = "Skip forward 10 seconds";
+"audio_skip_backward_hint" = "Skip backward 10 seconds";
+
+// Speed Control
+"audio_speed_control" = "Playback Speed";
+"audio_speed_title" = "Playback Speed";
+"audio_speed_05x" = "0.5x";
+"audio_speed_10x" = "1.0x";
+"audio_speed_15x" = "1.5x";
+"audio_speed_20x" = "2.0x";
+"audio_speed_format" = "x%@";
+
+// Download/Delete
+"audio_download" = "Download";
+"audio_delete" = "Delete";
+"audio_download_hint" = "Download audio for offline listening";
+"audio_delete_hint" = "Delete downloaded audio file";
+
+// Full Player
+"audio_full_player" = "Full Screen Player";
+"audio_full_player_hint" = "Open full screen player";
+"audio_share" = "Share";
+
+// Progress
+"audio_progress_bar" = "Playback Progress";
+"audio_progress_value" = "%@ of %@";
+"audio_current_time" = "Current Time";
+"audio_total_time" = "Total Time";
+
+// Info
+"audio_title" = "Audio Title";
+"audio_artwork" = "Audio Artwork";
+"audio_poi_label" = "Point of Interest";
+"audio_poi_info" = "POI: %@";
+
+// POI Screen
+"poi_audio_guide" = "Audio Guide";
+"poi_audio_guide_hint" = "Play audio guide for this point of interest";
