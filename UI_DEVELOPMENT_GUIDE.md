@@ -22,7 +22,7 @@
 
 #### Поддерживаемые устройства и разрешения:
 
-**iPhone:**
+**iPhone (Portrait):**
 - **iPhone SE (2nd gen):** 375×667
 - **iPhone SE (3rd gen):** 375×667
 - **iPhone 8:** 375×667
@@ -51,13 +51,37 @@
 - **iPhone 15 Pro:** 393×852
 - **iPhone 15 Pro Max:** 430×932
 
-**iPad:**
+**iPhone (Landscape):**
+- **iPhone SE (2nd/3rd gen):** 667×375
+- **iPhone 8:** 667×375
+- **iPhone 8 Plus:** 736×414
+- **iPhone X/XS/11 Pro:** 812×375
+- **iPhone XS Max/11 Pro Max:** 896×414
+- **iPhone XR/11:** 896×414
+- **iPhone 12/13 mini:** 812×375
+- **iPhone 12/13/14:** 844×390
+- **iPhone 12/13/14 Pro:** 844×390
+- **iPhone 12/13/14 Pro Max:** 926×428
+- **iPhone 14 Plus:** 926×428
+- **iPhone 14/15 Pro:** 852×393
+- **iPhone 14/15 Pro Max:** 932×430
+- **iPhone 15 Plus:** 932×430
+
+**iPad (Portrait):**
 - **iPad (9th gen):** 810×1080
 - **iPad (10th gen):** 820×1180
 - **iPad Air (4th gen):** 820×1180
 - **iPad Air (5th gen):** 820×1180
 - **iPad Pro 11" (1st-4th gen):** 834×1194
 - **iPad Pro 12.9" (1st-6th gen):** 1024×1366
+
+**iPad (Landscape):**
+- **iPad (9th gen):** 1080×810
+- **iPad (10th gen):** 1180×820
+- **iPad Air (4th gen):** 1180×820
+- **iPad Air (5th gen):** 1180×820
+- **iPad Pro 11" (1st-4th gen):** 1194×834
+- **iPad Pro 12.9" (1st-6th gen):** 1366×1024
 
 #### Принципы адаптивности:
 - **Responsive Design** — адаптация под размер экрана
@@ -68,9 +92,15 @@
 
 #### Ключевые размеры экранов:
 - **Compact Width:** iPhone в Portrait (375-430pt)
-- **Regular Width:** iPhone в Landscape, iPad (390-1024pt)
-- **Compact Height:** iPhone в Landscape (667-932pt)
-- **Regular Height:** iPhone в Portrait, iPad (812-1366pt)
+- **Regular Width:** iPhone в Landscape, iPad (667-1366pt)
+- **Compact Height:** iPhone в Landscape (375-430pt)
+- **Regular Height:** iPhone в Portrait, iPad (667-1366pt)
+
+#### Диапазоны размеров:
+- **iPhone Portrait:** 375×667 - 430×932
+- **iPhone Landscape:** 667×375 - 932×430
+- **iPad Portrait:** 810×1080 - 1024×1366
+- **iPad Landscape:** 1080×810 - 1366×1024
 
 #### Scale Factors:
 - **iPhone:** 2x, 3x (@2x, @3x)
@@ -1178,10 +1208,10 @@ extension Font {
 - [ ] Анимации плавные
 
 ### ✅ Проверка адаптивности
-- [ ] iPhone SE (3rd gen) (375×667) — Portrait и Landscape
-- [ ] iPhone 15 Pro Max (430×932) — Portrait и Landscape
-- [ ] iPad (10th gen) (820×1180) — Portrait и Landscape
-- [ ] iPad Pro 12.9" (1024×1366) — Portrait и Landscape
+- [ ] iPhone SE (3rd gen) (375×667) — Portrait и Landscape (667×375)
+- [ ] iPhone 15 Pro Max (430×932) — Portrait и Landscape (932×430)
+- [ ] iPad (10th gen) (820×1180) — Portrait и Landscape (1180×820)
+- [ ] iPad Pro 12.9" (1024×1366) — Portrait и Landscape (1366×1024)
 - [ ] Dynamic Type — все размеры шрифтов
 - [ ] Safe Areas — учет безопасных зон
 - [ ] Size Classes — Compact и Regular
