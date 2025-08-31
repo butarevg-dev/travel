@@ -18,6 +18,36 @@
 - **Combine** — реактивное программирование
 - **Modular Design** — переиспользуемые компоненты
 
+### 📱 Адаптивность устройств
+
+#### Поддерживаемые устройства и разрешения:
+
+**iPhone:**
+- **iPhone SE (2nd/3rd gen):** 375×667, 375×812
+- **iPhone 8/SE:** 375×667
+- **iPhone 8 Plus:** 414×736
+- **iPhone X/XS/11 Pro:** 375×812
+- **iPhone XR/11:** 414×896
+- **iPhone XS Max/11 Pro Max:** 414×896
+- **iPhone 12/13/14:** 390×844
+- **iPhone 12/13/14 Pro:** 390×844
+- **iPhone 12/13/14 Pro Max:** 428×926
+- **iPhone 15/15 Pro:** 393×852
+- **iPhone 15 Plus/15 Pro Max:** 430×932
+
+**iPad:**
+- **iPad (9th/10th gen):** 810×1080, 1080×810
+- **iPad Air (4th/5th gen):** 820×1180, 1180×820
+- **iPad Pro 11":** 834×1194, 1194×834
+- **iPad Pro 12.9":** 1024×1366, 1366×1024
+
+#### Принципы адаптивности:
+- **Responsive Design** — адаптация под размер экрана
+- **Orientation Support** — поддержка Portrait и Landscape
+- **Safe Area** — учет безопасных зон
+- **Dynamic Type** — адаптивная типографика
+- **Accessibility** — поддержка доступности
+
 ---
 
 ## 🚀 ЭТАПЫ РАЗРАБОТКИ UI
@@ -161,6 +191,87 @@ struct AppCard<Content: View>: View {
             .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
     }
 }
+
+// AdaptiveLayout.swift
+struct AdaptiveLayout<Content: View>: View {
+    let content: Content
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    @Environment(\.verticalSizeClass) var verticalSizeClass
+    
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+    
+    var body: some View {
+        Group {
+            if horizontalSizeClass == .compact {
+                // iPhone в Portrait
+                content
+                    .padding(.horizontal, AppSpacing.md)
+            } else {
+                // iPad или iPhone в Landscape
+                content
+                    .padding(.horizontal, AppSpacing.xl)
+                    .frame(maxWidth: 600)
+            }
+        }
+    }
+}
+
+// ResponsiveGrid.swift
+struct ResponsiveGrid<Data: RandomAccessCollection, Content: View>: View where Data.Element: Identifiable {
+    let data: Data
+    let columns: Int
+    let spacing: CGFloat
+    let content: (Data.Element) -> Content
+    
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    
+    init(data: Data, columns: Int = 2, spacing: CGFloat = AppSpacing.md, @ViewBuilder content: @escaping (Data.Element) -> Content) {
+        self.data = data
+        self.columns = columns
+        self.spacing = spacing
+        self.content = content
+    }
+    
+    var adaptiveColumns: Int {
+        switch horizontalSizeClass {
+        case .compact:
+            return 1 // iPhone Portrait
+        case .regular:
+            return columns // iPad или iPhone Landscape
+        default:
+            return 1
+        }
+    }
+    
+    var body: some View {
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: spacing), count: adaptiveColumns), spacing: spacing) {
+            ForEach(data) { item in
+                content(item)
+            }
+        }
+    }
+}
+
+// SafeAreaView.swift
+struct SafeAreaView<Content: View>: View {
+    let content: Content
+    
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+    
+    var body: some View {
+        content
+            .safeAreaInset(edge: .top) {
+                Color.clear.frame(height: 0)
+            }
+            .safeAreaInset(edge: .bottom) {
+                Color.clear.frame(height: 0)
+            }
+    }
+}
 ```
 
 ### 🗺️ Этап 2: Карта и навигация (2-3 недели)
@@ -172,36 +283,37 @@ struct MapScreen: View {
     @StateObject private var viewModel = MapViewModel()
     @State private var selectedPOI: POI?
     @State private var showingPOIDetail = false
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
     
     var body: some View {
         NavigationView {
-            ZStack {
-                // Основная карта
-                CustomMapView(
-                    pois: viewModel.pois,
-                    selectedPOI: $selectedPOI,
-                    userLocation: viewModel.userLocation
-                )
-                
-                // Поисковая панель
-                VStack {
-                    SearchPanel(
-                        searchText: $viewModel.searchText,
-                        selectedCategory: $viewModel.selectedCategory
+            AdaptiveLayout {
+                ZStack {
+                    // Основная карта
+                    CustomMapView(
+                        pois: viewModel.pois,
+                        selectedPOI: $selectedPOI,
+                        userLocation: viewModel.userLocation
                     )
-                    .padding(.horizontal, AppSpacing.md)
-                    .padding(.top, AppSpacing.md)
                     
-                    Spacer()
-                    
-                    // Панель фильтров
-                    if !viewModel.searchText.isEmpty || viewModel.selectedCategory != nil {
-                        FilterPanel(
-                            selectedCategory: $viewModel.selectedCategory,
-                            selectedFilters: $viewModel.selectedFilters
+                    // Поисковая панель
+                    VStack {
+                        SearchPanel(
+                            searchText: $viewModel.searchText,
+                            selectedCategory: $viewModel.selectedCategory
                         )
-                        .padding(.horizontal, AppSpacing.md)
-                        .padding(.bottom, AppSpacing.md)
+                        .padding(.top, horizontalSizeClass == .compact ? AppSpacing.md : AppSpacing.lg)
+                        
+                        Spacer()
+                        
+                        // Панель фильтров
+                        if !viewModel.searchText.isEmpty || viewModel.selectedCategory != nil {
+                            FilterPanel(
+                                selectedCategory: $viewModel.selectedCategory,
+                                selectedFilters: $viewModel.selectedFilters
+                            )
+                            .padding(.bottom, horizontalSizeClass == .compact ? AppSpacing.md : AppSpacing.lg)
+                        }
                     }
                 }
             }
@@ -376,33 +488,32 @@ struct POIScreen: View {
     @StateObject private var viewModel = POIViewModel()
     @State private var showingFilters = false
     @State private var searchText = ""
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 0) {
-                // Поисковая панель
-                SearchBar(text: $searchText)
-                    .padding(.horizontal, AppSpacing.md)
-                    .padding(.top, AppSpacing.sm)
-                
-                // Фильтры
-                FilterBar(
-                    selectedCategory: $viewModel.selectedCategory,
-                    selectedSort: $viewModel.selectedSort
-                )
-                .padding(.horizontal, AppSpacing.md)
-                .padding(.top, AppSpacing.sm)
-                
-                // Список POI
-                ScrollView {
-                    LazyVStack(spacing: AppSpacing.md) {
-                        ForEach(viewModel.filteredPOIs) { poi in
+            AdaptiveLayout {
+                VStack(spacing: 0) {
+                    // Поисковая панель
+                    SearchBar(text: $searchText)
+                        .padding(.top, horizontalSizeClass == .compact ? AppSpacing.sm : AppSpacing.md)
+                    
+                    // Фильтры
+                    FilterBar(
+                        selectedCategory: $viewModel.selectedCategory,
+                        selectedSort: $viewModel.selectedSort
+                    )
+                    .padding(.top, horizontalSizeClass == .compact ? AppSpacing.sm : AppSpacing.md)
+                    
+                    // Адаптивная сетка POI
+                    ScrollView {
+                        ResponsiveGrid(data: viewModel.filteredPOIs, columns: 2) { poi in
                             POICard(poi: poi) {
                                 viewModel.selectPOI(poi)
                             }
                         }
+                        .padding(horizontalSizeClass == .compact ? AppSpacing.md : AppSpacing.lg)
                     }
-                    .padding(AppSpacing.md)
                 }
             }
             .navigationTitle("Достопримечательности")
@@ -717,7 +828,209 @@ struct CircularProgressView: View {
 
 ---
 
-## 🎨 ДИЗАЙН-СИСТЕМА
+## 📱 АДАПТИВНОСТЬ И ОТЗЫВЧИВОСТЬ
+
+### 🎯 Принципы адаптивного дизайна
+
+#### 1. Size Classes
+```swift
+// Определение размера устройства
+@Environment(\.horizontalSizeClass) var horizontalSizeClass
+@Environment(\.verticalSizeClass) var verticalSizeClass
+
+// Использование в коде
+if horizontalSizeClass == .compact {
+    // iPhone в Portrait
+    VStack { /* контент */ }
+} else {
+    // iPad или iPhone в Landscape
+    HStack { /* контент */ }
+}
+```
+
+#### 2. Адаптивные отступы
+```swift
+// AdaptivePadding.swift
+struct AdaptivePadding: ViewModifier {
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    
+    func body(content: Content) -> some View {
+        content
+            .padding(.horizontal, horizontalSizeClass == .compact ? AppSpacing.md : AppSpacing.xl)
+            .padding(.vertical, horizontalSizeClass == .compact ? AppSpacing.sm : AppSpacing.md)
+    }
+}
+
+extension View {
+    func adaptivePadding() -> some View {
+        modifier(AdaptivePadding())
+    }
+}
+```
+
+#### 3. Адаптивная типографика
+```swift
+// AdaptiveTypography.swift
+struct AdaptiveTypography {
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    @Environment(\.dynamicTypeSize) var dynamicTypeSize
+    
+    static func titleFont() -> Font {
+        let baseSize: CGFloat = horizontalSizeClass == .compact ? 24 : 28
+        return .system(size: baseSize, weight: .bold, design: .default)
+    }
+    
+    static func bodyFont() -> Font {
+        let baseSize: CGFloat = horizontalSizeClass == .compact ? 16 : 18
+        return .system(size: baseSize, weight: .regular, design: .default)
+    }
+}
+```
+
+### 📱 Примеры адаптивных экранов
+
+#### 1. Адаптивный список
+```swift
+// AdaptiveList.swift
+struct AdaptiveList<Data: RandomAccessCollection, Content: View>: View where Data.Element: Identifiable {
+    let data: Data
+    let content: (Data.Element) -> Content
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    
+    var body: some View {
+        if horizontalSizeClass == .compact {
+            // iPhone Portrait - вертикальный список
+            LazyVStack(spacing: AppSpacing.md) {
+                ForEach(data) { item in
+                    content(item)
+                }
+            }
+        } else {
+            // iPad или iPhone Landscape - сетка
+            LazyVGrid(
+                columns: Array(repeating: GridItem(.flexible()), count: 2),
+                spacing: AppSpacing.md
+            ) {
+                ForEach(data) { item in
+                    content(item)
+                }
+            }
+        }
+    }
+}
+```
+
+#### 2. Адаптивная навигация
+```swift
+// AdaptiveNavigation.swift
+struct AdaptiveNavigation<Content: View>: View {
+    let content: Content
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+    
+    var body: some View {
+        if horizontalSizeClass == .compact {
+            // iPhone - стандартная навигация
+            NavigationView {
+                content
+            }
+        } else {
+            // iPad - Split View
+            NavigationSplitView {
+                SidebarView()
+            } detail: {
+                content
+            }
+        }
+    }
+}
+```
+
+#### 3. Адаптивные карточки
+```swift
+// AdaptiveCard.swift
+struct AdaptiveCard<Content: View>: View {
+    let content: Content
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+    
+    var body: some View {
+        content
+            .padding(horizontalSizeClass == .compact ? AppSpacing.md : AppSpacing.lg)
+            .background(AppColors.surface)
+            .cornerRadius(horizontalSizeClass == .compact ? AppCornerRadius.medium : AppCornerRadius.large)
+            .shadow(
+                color: .black.opacity(0.1),
+                radius: horizontalSizeClass == .compact ? 2 : 4,
+                x: 0,
+                y: horizontalSizeClass == .compact ? 1 : 2
+            )
+    }
+}
+```
+
+### 🔄 Ориентация экрана
+
+#### 1. Поддержка Landscape
+```swift
+// OrientationAwareView.swift
+struct OrientationAwareView<Content: View>: View {
+    let content: Content
+    @State private var orientation = UIDeviceOrientation.portrait
+    
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+    
+    var body: some View {
+        Group {
+            if orientation.isPortrait {
+                // Portrait layout
+                VStack {
+                    content
+                }
+            } else {
+                // Landscape layout
+                HStack {
+                    content
+                }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIDevice.orientationDidChangeNotification)) { _ in
+            orientation = UIDevice.current.orientation
+        }
+    }
+}
+```
+
+#### 2. Адаптивные изображения
+```swift
+// AdaptiveImage.swift
+struct AdaptiveImage: View {
+    let imageName: String
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    
+    var body: some View {
+        Image(imageName)
+            .resizable()
+            .aspectRatio(contentMode: horizontalSizeClass == .compact ? .fill : .fit)
+            .frame(
+                maxWidth: horizontalSizeClass == .compact ? .infinity : 400,
+                maxHeight: horizontalSizeClass == .compact ? 200 : 300
+            )
+            .clipped()
+            .cornerRadius(AppCornerRadius.medium)
+    }
+}
+```
+
+### 🎨 ДИЗАЙН-СИСТЕМА
 
 ### 🎨 Цветовая палитра
 ```swift
@@ -777,6 +1090,13 @@ extension Font {
 - **Accessibility Inspector** — тестирование доступности
 - **Dark Mode** — тестирование темной темы
 
+### 📱 Тестирование адаптивности
+- **Разные устройства** — iPhone SE, iPhone 15 Pro Max, iPad
+- **Ориентации** — Portrait и Landscape
+- **Size Classes** — Compact и Regular
+- **Dynamic Type** — разные размеры шрифтов
+- **Safe Areas** — учет безопасных зон
+
 ### 🎨 Ресурсы
 - **SF Symbols** — системные иконки Apple
 - **Human Interface Guidelines** — гайдлайны Apple
@@ -828,6 +1148,17 @@ extension Font {
 - [ ] Доступность настроена
 - [ ] Производительность оптимизирована
 - [ ] Анимации плавные
+
+### ✅ Проверка адаптивности
+- [ ] iPhone SE (375×667) — Portrait и Landscape
+- [ ] iPhone 15 Pro Max (430×932) — Portrait и Landscape
+- [ ] iPad (810×1080) — Portrait и Landscape
+- [ ] iPad Pro 12.9" (1024×1366) — Portrait и Landscape
+- [ ] Dynamic Type — все размеры шрифтов
+- [ ] Safe Areas — учет безопасных зон
+- [ ] Size Classes — Compact и Regular
+- [ ] Split View на iPad
+- [ ] Slide Over на iPad
 
 ---
 
