@@ -2,342 +2,474 @@ import SwiftUI
 
 struct POIScreen: View {
     @StateObject private var viewModel = POIViewModel()
-    @StateObject private var userService = UserService.shared
-    @StateObject private var gamificationService = GamificationService.shared
+    @State private var showingFilters = false
     @State private var searchText = ""
-    @State private var selectedCategory: String? = nil
-    @State private var showFavoritesOnly = false
-    
-    var filteredPOIs: [POI] {
-        var pois = viewModel.pois
-        
-        // Apply search filter
-        if !searchText.isEmpty {
-            pois = pois.filter { poi in
-                poi.title.localizedCaseInsensitiveContains(searchText) ||
-                poi.description.localizedCaseInsensitiveContains(searchText)
-            }
-        }
-        
-        // Apply category filter
-        if let category = selectedCategory {
-            pois = pois.filter { $0.categories.contains(category) }
-        }
-        
-        // Apply favorites filter
-        if showFavoritesOnly {
-            pois = pois.filter { viewModel.favorites.contains($0.id) }
-        }
-        
-        return pois
-    }
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
     
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                // Search and filters
-                VStack(spacing: 8) {
-                    // Search bar
-                    HStack {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundColor(.secondary)
-                        TextField("Поиск по названию...", text: $searchText)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(.ultraThinMaterial)
-                    .cornerRadius(12)
+        NavigationView {
+            AdaptiveLayout {
+                VStack(spacing: 0) {
+                    // Поисковая панель
+                    SearchBar(text: $searchText)
+                        .padding(.top, horizontalSizeClass == .compact ? AppSpacing.sm : AppSpacing.md)
                     
-                    // Category filters
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
-                            CategoryChip(title: "Все", isSelected: selectedCategory == nil) {
-                                selectedCategory = nil
-                            }
-                            
-                            ForEach(Array(Set(viewModel.pois.flatMap { $0.categories })).sorted(), id: \.self) { category in
-                                CategoryChip(title: category.capitalized, isSelected: selectedCategory == category) {
-                                    selectedCategory = selectedCategory == category ? nil : category
-                                }
-                            }
-                        }
-                        .padding(.horizontal, 16)
-                    }
-                    
-                    // Favorites toggle
-                    HStack {
-                        Toggle("Только избранное", isOn: $showFavoritesOnly)
-                            .font(.system(size: 14, weight: .medium))
-                        Spacer()
-                        Text("\(filteredPOIs.count) мест")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.secondary)
-                    }
-                    .padding(.horizontal, 16)
-                }
-                .padding(.vertical, 8)
-                .background(.ultraThinMaterial)
-                
-                // POI list
-                List(filteredPOIs, id: \.id) { poi in
-                    NavigationLink(destination: POIDetailView(poi: poi, viewModel: viewModel)) {
-                        POIListItem(poi: poi, isFavorite: viewModel.favorites.contains(poi.id)) {
-                            viewModel.toggleFavorite(poi.id)
-                        }
-                    }
-                }
-                .listStyle(.plain)
-            }
-            .navigationTitle("Каталог POI")
-            .onAppear {
-                Task {
-                    await viewModel.loadPOIs()
-                }
-            }
-        }
-    }
-}
-
-struct POIListItem: View {
-    let poi: POI
-    let isFavorite: Bool
-    let onFavoriteToggle: () -> Void
-    
-    var body: some View {
-        HStack(spacing: 12) {
-            // POI image placeholder
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color.gray.opacity(0.2))
-                .frame(width: 60, height: 60)
-                .overlay(
-                    Image(systemName: "mappin.circle")
-                        .font(.title2)
-                        .foregroundColor(.red)
-                )
-            
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text(poi.title)
-                        .font(.system(size: 16, weight: .semibold))
-                        .lineLimit(1)
-                    Spacer()
-                    Button(action: onFavoriteToggle) {
-                        Image(systemName: isFavorite ? "heart.fill" : "heart")
-                            .foregroundColor(isFavorite ? .red : .gray)
-                    }
-                }
-                
-                Text(poi.short)
-                    .font(.system(size: 14))
-                    .foregroundColor(.secondary)
-                    .lineLimit(2)
-                
-                HStack(spacing: 8) {
-                    ForEach(poi.categories.prefix(2), id: \.self) { category in
-                        Text(category)
-                            .font(.system(size: 10, weight: .medium))
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Color.red.opacity(0.1))
-                            .foregroundColor(.red)
-                            .cornerRadius(4)
-                    }
-                    
-                    Spacer()
-                    
-                    HStack(spacing: 4) {
-                        Image(systemName: "star.fill")
-                            .font(.system(size: 10))
-                            .foregroundColor(.yellow)
-                        Text(String(format: "%.1f", poi.rating))
-                            .font(.system(size: 12, weight: .medium))
-                    }
-                }
-            }
-        }
-        .padding(.vertical, 4)
-    }
-}
-
-struct POIDetailView: View {
-    let poi: POI
-    @ObservedObject var viewModel: POIViewModel
-    @StateObject private var audioService = AudioPlayerService.shared
-    @StateObject private var gamificationService = GamificationService.shared
-    @State private var rating: Int = 0
-    @State private var comment: String = ""
-    
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                // Header image
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.gray.opacity(0.2))
-                    .frame(height: 200)
-                    .overlay(
-                        VStack {
-                            Image(systemName: "mappin.circle")
-                                .font(.system(size: 48))
-                                .foregroundColor(.red)
-                            Text("Фото \(poi.title)")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
+                    // Фильтры
+                    FilterBar(
+                        selectedCategory: $viewModel.selectedCategory,
+                        selectedSort: $viewModel.selectedSort
                     )
-                
-                VStack(alignment: .leading, spacing: 12) {
-                    // Title and favorite
-                    HStack {
-                        Text(poi.title)
-                            .font(.title2)
-                            .fontWeight(.bold)
-                        Spacer()
-                        Button(action: { 
-                            viewModel.toggleFavorite(poi.id)
-                            Task {
-                                await gamificationService.likePOI(poi.id)
-                            }
-                        }) {
-                            Image(systemName: viewModel.favorites.contains(poi.id) ? "heart.fill" : "heart")
-                                .font(.title2)
-                                .foregroundColor(viewModel.favorites.contains(poi.id) ? .red : .gray)
-                        }
-                    }
+                    .padding(.top, horizontalSizeClass == .compact ? AppSpacing.sm : AppSpacing.md)
                     
-                    // Rating
-                    HStack {
-                        Text("Рейтинг:")
-                            .font(.system(size: 14, weight: .medium))
-                        ForEach(1...5, id: \.self) { i in
-                            Image(systemName: i <= poi.rating ? "star.fill" : "star")
-                                .foregroundColor(.yellow)
-                                .onTapGesture { rating = i }
-                        }
-                        Text(String(format: "%.1f", poi.rating))
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    // Categories
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
-                            ForEach(poi.categories, id: \.self) { category in
-                                Text(category)
-                                    .font(.system(size: 12, weight: .medium))
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.red.opacity(0.1))
-                                    .foregroundColor(.red)
-                                    .cornerRadius(8)
+                    // Адаптивная сетка POI
+                    ScrollView {
+                        ResponsiveGrid(data: viewModel.filteredPOIs, columns: 2) { poi in
+                            POICard(poi: poi) {
+                                viewModel.selectPOI(poi)
                             }
                         }
-                    }
-                    
-                    // Description
-                    Text("Описание")
-                        .font(.system(size: 16, weight: .semibold))
-                    Text(poi.description)
-                        .font(.system(size: 14))
-                        .foregroundColor(.secondary)
-                    
-                    // Working hours and ticket info
-                    if let hours = poi.openingHours {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Время работы")
-                                .font(.system(size: 14, weight: .semibold))
-                            Text(hours)
-                                .font(.system(size: 14))
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    
-                    if let ticket = poi.ticket {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Стоимость")
-                                .font(.system(size: 14, weight: .semibold))
-                            Text(ticket)
-                                .font(.system(size: 14))
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    
-                    // Audio guide button
-                    if !poi.audio.isEmpty {
-                        Button(action: playAudioGuide) {
-                            HStack {
-                                Image(systemName: "headphones")
-                                Text("poi_audio_guide", bundle: .main)
-                                Spacer()
-                                Image(systemName: "play.circle.fill")
-                                    .foregroundColor(.red)
-                            }
-                            .padding()
-                            .background(.ultraThinMaterial)
-                            .cornerRadius(12)
-                        }
-                        .accessibilityLabel(Text("poi_audio_guide", bundle: .main))
-                        .accessibilityHint(Text("poi_audio_guide_hint", bundle: .main))
-                    }
-                    
-                    // Comments section
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Комментарии")
-                            .font(.system(size: 16, weight: .semibold))
-                        
-                        TextField("Оставить комментарий...", text: $comment, axis: .vertical)
-                            .textFieldStyle(.roundedBorder)
-                            .lineLimit(3...6)
-                        
-                        Button("Отправить") {
-                            Task {
-                                // TODO: Submit comment to ReviewService
-                                // For now, just trigger gamification event
-                                await gamificationService.likePOI(poi.id)
-                                comment = ""
-                            }
-                        }
-                        .disabled(comment.isEmpty)
+                        .padding(horizontalSizeClass == .compact ? AppSpacing.md : AppSpacing.lg)
                     }
                 }
-                .padding(.horizontal, 16)
+            }
+            .navigationTitle("Достопримечательности")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Фильтры") {
+                        showingFilters = true
+                    }
+                }
+            }
+            .sheet(isPresented: $viewModel.showingPOIDetail) {
+                if let poi = viewModel.selectedPOI {
+                    POIDetailView(poi: poi)
+                }
+            }
+            .sheet(isPresented: $showingFilters) {
+                POIFilterView(
+                    selectedCategory: $viewModel.selectedCategory,
+                    selectedFilters: $viewModel.selectedFilters
+                )
             }
         }
-        .navigationTitle("Детали")
-        .navigationBarTitleDisplayMode(.inline)
-    }
-    
-    private func playAudioGuide() {
-        guard let audioURL = poi.audio.first else { return }
-        
-        // Create a mock URL for demonstration
-        // In a real app, this would be a real audio file URL
-        let url = URL(string: audioURL) ?? URL(string: "https://example.com/audio.m4a")!
-        
-        audioService.loadAudio(from: url, title: "Аудиогид: \(poi.title)", poiId: poi.id)
     }
 }
 
+// MARK: - SearchBar
+struct SearchBar: View {
+    @Binding var text: String
+    
+    var body: some View {
+        HStack {
+            Image(systemName: "magnifyingglass")
+                .foregroundColor(AppColors.textSecondary)
+            
+            TextField("Поиск достопримечательностей...", text: $text)
+                .font(AppTypography.body)
+            
+            if !text.isEmpty {
+                Button("Очистить") {
+                    text = ""
+                }
+                .font(AppTypography.caption1)
+                .foregroundColor(AppColors.primary)
+            }
+        }
+        .padding(AppSpacing.md)
+        .background(AppColors.surface)
+        .cornerRadius(AppCornerRadius.large)
+        .padding(.horizontal, AppSpacing.md)
+    }
+}
+
+// MARK: - FilterBar
+struct FilterBar: View {
+    @Binding var selectedCategory: String?
+    @Binding var selectedSort: SortOption
+    
+    enum SortOption: String, CaseIterable {
+        case name = "По названию"
+        case rating = "По рейтингу"
+        case distance = "По расстоянию"
+        case popularity = "По популярности"
+    }
+    
+    var body: some View {
+        HStack {
+            // Категории
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: AppSpacing.sm) {
+                    CategoryChip(
+                        category: "Все",
+                        isSelected: selectedCategory == nil
+                    ) {
+                        selectedCategory = nil
+                    }
+                    
+                    ForEach(["Музеи", "Храмы", "Парки", "Рестораны"], id: \.self) { category in
+                        CategoryChip(
+                            category: category,
+                            isSelected: selectedCategory == category
+                        ) {
+                            selectedCategory = selectedCategory == category ? nil : category
+                        }
+                    }
+                }
+                .padding(.horizontal, AppSpacing.md)
+            }
+            
+            Spacer()
+            
+            // Сортировка
+            Menu {
+                ForEach(SortOption.allCases, id: \.self) { option in
+                    Button(option.rawValue) {
+                        selectedSort = option
+                    }
+                }
+            } label: {
+                Image(systemName: "arrow.up.arrow.down")
+                    .foregroundColor(AppColors.primary)
+                    .padding(AppSpacing.sm)
+                    .background(AppColors.surface)
+                    .cornerRadius(AppCornerRadius.medium)
+            }
+        }
+        .padding(.horizontal, AppSpacing.md)
+    }
+}
+
+// MARK: - POICard
+struct POICard: View {
+    let poi: POI
+    let onTap: () -> Void
+    
+    var body: some View {
+        AppCard {
+            VStack(alignment: .leading, spacing: AppSpacing.md) {
+                // Изображение
+                AsyncImage(url: URL(string: poi.imageUrl)) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                } placeholder: {
+                    Rectangle()
+                        .fill(AppColors.surface)
+                        .overlay(
+                            Image(systemName: "photo")
+                                .foregroundColor(AppColors.textSecondary)
+                        )
+                }
+                .frame(height: 200)
+                .clipped()
+                .cornerRadius(AppCornerRadius.medium)
+                
+                // Информация
+                VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                    // Название и рейтинг
+                    HStack {
+                        Text(poi.name)
+                            .font(AppTypography.title3)
+                            .foregroundColor(AppColors.text)
+                            .lineLimit(2)
+                        
+                        Spacer()
+                        
+                        HStack(spacing: AppSpacing.xs) {
+                            Image(systemName: "star.fill")
+                                .foregroundColor(.yellow)
+                                .font(.caption)
+                            
+                            Text(String(format: "%.1f", poi.rating))
+                                .font(AppTypography.caption1)
+                                .foregroundColor(AppColors.textSecondary)
+                        }
+                    }
+                    
+                    // Категория и адрес
+                    HStack {
+                        CategoryChip(
+                            category: poi.category,
+                            isSelected: false
+                        ) {
+                            // Ничего не делаем, это просто отображение
+                        }
+                        
+                        Spacer()
+                        
+                        Text(poi.address)
+                            .font(AppTypography.caption1)
+                            .foregroundColor(AppColors.textSecondary)
+                            .lineLimit(1)
+                    }
+                    
+                    // Описание
+                    Text(poi.description)
+                        .font(AppTypography.body)
+                        .foregroundColor(AppColors.text)
+                        .lineLimit(3)
+                    
+                    // Действия
+                    HStack {
+                        Button("Подробнее") {
+                            onTap()
+                        }
+                        .font(AppTypography.caption1)
+                        .foregroundColor(AppColors.primary)
+                        
+                        Spacer()
+                        
+                        Button("Избранное") {
+                            // Добавить в избранное
+                        }
+                        .font(AppTypography.caption1)
+                        .foregroundColor(AppColors.textSecondary)
+                        
+                        Button("Поделиться") {
+                            // Поделиться POI
+                        }
+                        .font(AppTypography.caption1)
+                        .foregroundColor(AppColors.textSecondary)
+                    }
+                }
+            }
+        }
+        .onTapGesture {
+            onTap()
+        }
+    }
+}
+
+// MARK: - POIViewModel
 class POIViewModel: ObservableObject {
     @Published var pois: [POI] = []
-    @Published var favorites: Set<String> = []
+    @Published var selectedCategory: String?
+    @Published var selectedSort: FilterBar.SortOption = .name
+    @Published var selectedFilters: [String] = []
+    @Published var showingPOIDetail = false
+    @Published var selectedPOI: POI?
     
-    func loadPOIs() async {
-        do {
-            let list = try await FirestoreService.shared.fetchPOIList()
-            await MainActor.run {
-                self.pois = list
+    var filteredPOIs: [POI] {
+        var filtered = pois
+        
+        // Фильтрация по категории
+        if let category = selectedCategory {
+            filtered = filtered.filter { $0.category == category }
+        }
+        
+        // Фильтрация по дополнительным фильтрам
+        for filter in selectedFilters {
+            filtered = filtered.filter { poi in
+                // Логика фильтрации
+                return true
             }
-        } catch {
-            // Handle error
         }
+        
+        // Сортировка
+        switch selectedSort {
+        case .name:
+            filtered.sort { $0.name < $1.name }
+        case .rating:
+            filtered.sort { $0.rating > $1.rating }
+        case .distance:
+            filtered.sort { $0.distance < $1.distance }
+        case .popularity:
+            filtered.sort { $0.popularity > $1.popularity }
+        }
+        
+        return filtered
     }
     
-    func toggleFavorite(_ poiId: String) {
-        if favorites.contains(poiId) {
-            favorites.remove(poiId)
-        } else {
-            favorites.insert(poiId)
-        }
-        // TODO: Save to UserDefaults or backend
+    func selectPOI(_ poi: POI) {
+        selectedPOI = poi
+        showingPOIDetail = true
     }
+}
+
+// MARK: - POIFilterView
+struct POIFilterView: View {
+    @Binding var selectedCategory: String?
+    @Binding var selectedFilters: [String]
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationView {
+            List {
+                Section("Категории") {
+                    ForEach(["Музеи", "Храмы", "Парки", "Рестораны", "Кафе", "Магазины"], id: \.self) { category in
+                        HStack {
+                            Text(category)
+                            Spacer()
+                            if selectedCategory == category {
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(AppColors.primary)
+                            }
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            selectedCategory = selectedCategory == category ? nil : category
+                        }
+                    }
+                }
+                
+                Section("Дополнительные фильтры") {
+                    ForEach(["Бесплатно", "С рейтингом 4+", "Открыто сейчас"], id: \.self) { filter in
+                        HStack {
+                            Text(filter)
+                            Spacer()
+                            if selectedFilters.contains(filter) {
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(AppColors.primary)
+                            }
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            if selectedFilters.contains(filter) {
+                                selectedFilters.removeAll { $0 == filter }
+                            } else {
+                                selectedFilters.append(filter)
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Фильтры")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Сбросить") {
+                        selectedCategory = nil
+                        selectedFilters.removeAll()
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Готово") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - POIDetailView
+struct POIDetailView: View {
+    let poi: POI
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(alignment: .leading, spacing: AppSpacing.lg) {
+                    // Изображение
+                    AsyncImage(url: URL(string: poi.imageUrl)) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        Rectangle()
+                            .fill(AppColors.surface)
+                            .overlay(
+                                Image(systemName: "photo")
+                                    .foregroundColor(AppColors.textSecondary)
+                            )
+                    }
+                    .frame(height: 250)
+                    .clipped()
+                    .cornerRadius(AppCornerRadius.medium)
+                    
+                    // Информация
+                    VStack(alignment: .leading, spacing: AppSpacing.md) {
+                        // Название и рейтинг
+                        HStack {
+                            Text(poi.name)
+                                .font(AppTypography.title1)
+                                .foregroundColor(AppColors.text)
+                            
+                            Spacer()
+                            
+                            HStack(spacing: AppSpacing.xs) {
+                                Image(systemName: "star.fill")
+                                    .foregroundColor(.yellow)
+                                
+                                Text(String(format: "%.1f", poi.rating))
+                                    .font(AppTypography.headline)
+                                    .foregroundColor(AppColors.text)
+                            }
+                        }
+                        
+                        // Категория
+                        CategoryChip(
+                            category: poi.category,
+                            isSelected: false
+                        ) {
+                            // Ничего не делаем
+                        }
+                        
+                        // Описание
+                        Text(poi.description)
+                            .font(AppTypography.body)
+                            .foregroundColor(AppColors.text)
+                        
+                        // Адрес
+                        HStack {
+                            Image(systemName: "location")
+                                .foregroundColor(AppColors.textSecondary)
+                            Text(poi.address)
+                                .font(AppTypography.body)
+                                .foregroundColor(AppColors.text)
+                        }
+                        
+                        // Часы работы
+                        if let workingHours = poi.workingHours {
+                            HStack {
+                                Image(systemName: "clock")
+                                    .foregroundColor(AppColors.textSecondary)
+                                Text(workingHours)
+                                    .font(AppTypography.body)
+                                    .foregroundColor(AppColors.text)
+                            }
+                        }
+                        
+                        // Цена
+                        if let price = poi.price {
+                            HStack {
+                                Image(systemName: "creditcard")
+                                    .foregroundColor(AppColors.textSecondary)
+                                Text(price)
+                                    .font(AppTypography.body)
+                                    .foregroundColor(AppColors.text)
+                            }
+                        }
+                        
+                        // Кнопки действий
+                        HStack {
+                            AppButton(title: "Навигация", style: .primary) {
+                                // Открыть навигацию
+                            }
+                            
+                            AppButton(title: "Поделиться", style: .outline) {
+                                // Поделиться POI
+                            }
+                        }
+                    }
+                    .padding(AppSpacing.md)
+                }
+            }
+            .navigationTitle("Детали")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Закрыть") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+#Preview {
+    POIScreen()
 }
