@@ -22,50 +22,65 @@
 
 #### Поддерживаемые устройства и разрешения:
 
-**iPhone (Portrait):**
-- **iPhone SE (2nd gen):** 375×667
-- **iPhone SE (3rd gen):** 375×667
-- **iPhone 8:** 375×667
-- **iPhone 8 Plus:** 414×736
-- **iPhone X:** 375×812
-- **iPhone XS:** 375×812
-- **iPhone XS Max:** 414×896
-- **iPhone XR:** 414×896
-- **iPhone 11:** 414×896
-- **iPhone 11 Pro:** 375×812
-- **iPhone 11 Pro Max:** 414×896
-- **iPhone 12 mini:** 375×812
-- **iPhone 12:** 390×844
-- **iPhone 12 Pro:** 390×844
-- **iPhone 12 Pro Max:** 428×926
-- **iPhone 13 mini:** 375×812
-- **iPhone 13:** 390×844
-- **iPhone 13 Pro:** 390×844
-- **iPhone 13 Pro Max:** 428×926
-- **iPhone 14:** 390×844
-- **iPhone 14 Plus:** 428×926
-- **iPhone 14 Pro:** 393×852
-- **iPhone 14 Pro Max:** 430×932
-- **iPhone 15:** 393×852
-- **iPhone 15 Plus:** 430×932
-- **iPhone 15 Pro:** 393×852
-- **iPhone 15 Pro Max:** 430×932
+**iPhone (Portrait - пиксели):**
+- **iPhone SE (2nd gen):** 1334×750
+- **iPhone SE (3rd gen):** 1334×750
+- **iPhone 8:** 1334×750
+- **iPhone 8 Plus:** 1920×1080
+- **iPhone X:** 2436×1125
+- **iPhone XS:** 2436×1125
+- **iPhone XR:** 1792×828
+- **iPhone 11:** 1792×828
+- **iPhone 11 Pro:** 2436×1125
+- **iPhone 11 Pro Max:** 2688×1242
+- **iPhone 12 mini:** 2340×1080
+- **iPhone 12:** 2532×1170
+- **iPhone 12 Pro:** 2532×1170
+- **iPhone 12 Pro Max:** 2778×1284
+- **iPhone 13 mini:** 2340×1080
+- **iPhone 13:** 2532×1170
+- **iPhone 13 Pro:** 2532×1170
+- **iPhone 13 Pro Max:** 2778×1284
+- **iPhone 14:** 2532×1170
+- **iPhone 14 Plus:** 2778×1284
+- **iPhone 14 Pro:** 2532×1170
+- **iPhone 14 Pro Max:** 2796×1290
+- **iPhone 15:** 2556×1179
+- **iPhone 15 Plus:** 2796×1290
+- **iPhone 15 Pro:** 2556×1179
+- **iPhone 15 Pro Max:** 2796×1290
 
-**iPhone (Landscape):**
-- **iPhone SE (2nd/3rd gen):** 667×375
-- **iPhone 8:** 667×375
-- **iPhone 8 Plus:** 736×414
-- **iPhone X/XS/11 Pro:** 812×375
-- **iPhone XS Max/11 Pro Max:** 896×414
-- **iPhone XR/11:** 896×414
-- **iPhone 12/13 mini:** 812×375
-- **iPhone 12/13/14:** 844×390
-- **iPhone 12/13/14 Pro:** 844×390
-- **iPhone 12/13/14 Pro Max:** 926×428
-- **iPhone 14 Plus:** 926×428
-- **iPhone 14/15 Pro:** 852×393
-- **iPhone 14/15 Pro Max:** 932×430
-- **iPhone 15 Plus:** 932×430
+**iPhone (Portrait - points):**
+- **iPhone SE (2nd/3rd gen):** 375×667 (@2x)
+- **iPhone 8:** 375×667 (@2x)
+- **iPhone 8 Plus:** 414×736 (@3x)
+- **iPhone X/XS:** 375×812 (@3x)
+- **iPhone XR/11:** 414×896 (@2x)
+- **iPhone 11 Pro:** 375×812 (@3x)
+- **iPhone 11 Pro Max:** 414×896 (@3x)
+- **iPhone 12/13 mini:** 375×812 (@3x)
+- **iPhone 12/13/14/14 Pro:** 390×844 (@3x)
+- **iPhone 12/13/14 Pro Max:** 428×926 (@3x)
+- **iPhone 14 Plus:** 428×926 (@3x)
+- **iPhone 14 Pro Max:** 430×932 (@3x)
+- **iPhone 15/15 Pro:** 393×852 (@3x)
+- **iPhone 15 Plus/15 Pro Max:** 430×932 (@3x)
+
+**iPhone (Landscape - points):**
+- **iPhone SE (2nd/3rd gen):** 667×375 (@2x)
+- **iPhone 8:** 667×375 (@2x)
+- **iPhone 8 Plus:** 736×414 (@3x)
+- **iPhone X/XS:** 812×375 (@3x)
+- **iPhone XR/11:** 896×414 (@2x)
+- **iPhone 11 Pro:** 812×375 (@3x)
+- **iPhone 11 Pro Max:** 896×414 (@3x)
+- **iPhone 12/13 mini:** 812×375 (@3x)
+- **iPhone 12/13/14/14 Pro:** 844×390 (@3x)
+- **iPhone 12/13/14 Pro Max:** 926×428 (@3x)
+- **iPhone 14 Plus:** 926×428 (@3x)
+- **iPhone 14 Pro Max:** 932×430 (@3x)
+- **iPhone 15/15 Pro:** 852×393 (@3x)
+- **iPhone 15 Plus/15 Pro Max:** 932×430 (@3x)
 
 **iPad (Portrait):**
 - **iPad (9th gen):** 810×1080
@@ -96,11 +111,17 @@
 - **Compact Height:** iPhone в Landscape (375-430pt)
 - **Regular Height:** iPhone в Portrait, iPad (667-1366pt)
 
-#### Диапазоны размеров:
+#### Диапазоны размеров (points):
 - **iPhone Portrait:** 375×667 - 430×932
 - **iPhone Landscape:** 667×375 - 932×430
 - **iPad Portrait:** 810×1080 - 1024×1366
 - **iPad Landscape:** 1080×810 - 1366×1024
+
+#### Диапазоны размеров (пиксели):
+- **iPhone Portrait:** 1334×750 - 2796×1290
+- **iPhone Landscape:** 750×1334 - 1290×2796
+- **iPad Portrait:** 1620×2160 - 2048×2732
+- **iPad Landscape:** 2160×1620 - 2732×2048
 
 #### Scale Factors:
 - **iPhone:** 2x, 3x (@2x, @3x)
@@ -1208,10 +1229,10 @@ extension Font {
 - [ ] Анимации плавные
 
 ### ✅ Проверка адаптивности
-- [ ] iPhone SE (3rd gen) (375×667) — Portrait и Landscape (667×375)
-- [ ] iPhone 15 Pro Max (430×932) — Portrait и Landscape (932×430)
-- [ ] iPad (10th gen) (820×1180) — Portrait и Landscape (1180×820)
-- [ ] iPad Pro 12.9" (1024×1366) — Portrait и Landscape (1366×1024)
+- [ ] iPhone SE (3rd gen) (375×667 @2x) — Portrait и Landscape (667×375 @2x)
+- [ ] iPhone 15 Pro Max (430×932 @3x) — Portrait и Landscape (932×430 @3x)
+- [ ] iPad (10th gen) (820×1180 @2x) — Portrait и Landscape (1180×820 @2x)
+- [ ] iPad Pro 12.9" (1024×1366 @2x) — Portrait и Landscape (1366×1024 @2x)
 - [ ] Dynamic Type — все размеры шрифтов
 - [ ] Safe Areas — учет безопасных зон
 - [ ] Size Classes — Compact и Regular
